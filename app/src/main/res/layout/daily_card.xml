@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/dailyChart"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dailyDescription" />
+
+    <TextView
+        android:id="@+id/dailyName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:text="Tuesday"
+        android:textColor="@android:color/black"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/dailyHighLow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/dailyName"
+        tools:text="54° | 72°" />
+
+    <TextView
+        android:id="@+id/dailyDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Possible light rain in the morning and afternoon."
+        app:layout_constraintStart_toStartOf="@+id/dailyName"
+        app:layout_constraintTop_toBottomOf="@+id/dailyName" />
+
+    <HorizontalScrollView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingEnd="32dp"
+        android:scrollbars="none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dailyChart">
+
+        <com.google.android.material.chip.ChipGroup
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            android:paddingStart="32dp"
+            app:singleLine="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/dailyChipSummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipBackgroundColor="@color/chip_bg_temperature"
+                android:text="Summary"
+                android:textColor="@color/chipDefault"
+                app:chipIcon="@drawable/ic_list_black_24dp"
+                app:chipIconSize="12dp"
+                app:chipIconTint="@color/chipDefault"
+                app:chipStartPadding="12dp"
+                app:chipStrokeColor="@color/chipDefault"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/dailyChipTemperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipBackgroundColor="@color/chip_bg_temperature"
+                android:text="Temperature"
+                android:textColor="@color/chipDefault"
+                app:chipIcon="@drawable/ic_thermostat_black_24dp"
+                app:chipIconSize="12dp"
+                app:chipIconTint="@color/chipDefault"
+                app:chipStartPadding="12dp"
+                app:chipStrokeColor="@color/colorTemperatureBackground"
+                app:chipStrokeWidth="1dp" />
+
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/dailyChipRain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipBackgroundColor="@color/chip_bg_rain"
+                android:text="Rain"
+                android:textColor="@color/chipDefault"
+                app:chipIcon="@drawable/ic_raindrop_black_24dp"
+                app:chipIconSize="12dp"
+                app:chipIconTint="@color/chipDefault"
+                app:chipStartPadding="12dp"
+                app:chipStrokeColor="@color/colorRainBackground"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/dailyChipUV"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipBackgroundColor="@color/chip_bg_uv_index"
+                android:text="UV Index"
+                android:textColor="@color/chipDefault"
+                app:chipIcon="@drawable/ic_uv_index_black_24dp"
+                app:chipIconSize="12dp"
+                app:chipIconTint="@color/chipDefault"
+                app:chipStartPadding="12dp"
+                app:chipStrokeColor="@color/colorUVIndexBackground"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/dailyChipWind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipBackgroundColor="@color/chip_bg_wind"
+                android:text="Wind"
+                android:textColor="@color/chipDefault"
+                app:chipIcon="@drawable/ic_wind_black_24dp"
+                app:chipIconSize="12dp"
+                app:chipIconTint="@color/chipDefault"
+                app:chipStartPadding="12dp"
+                app:chipStrokeColor="@color/colorWindBackground"
+                app:chipStrokeWidth="1dp" />
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
