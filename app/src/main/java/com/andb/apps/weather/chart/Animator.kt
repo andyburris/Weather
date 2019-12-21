@@ -6,10 +6,12 @@ import com.github.mikephil.charting.data.Entry
 
 fun BarChart.animateChange(newData: List<Entry>,
                            oldData: List<Entry> = getChartEntries(this),
-                           block: AnimateDataSetChanged.() -> Unit) {
-    val animator = AnimateDataSetChanged(this, oldData, newData)
+                           animate: Boolean = true,
+                           block: DataSetChanger.() -> Unit
+) {
+    val animator = DataSetChanger(this, oldData, newData)
     block.invoke(animator)
-    animator.run()
+    animator.run(animate)
 }
 
 private fun getChartEntries(chart: Chart<*>): List<Entry> {

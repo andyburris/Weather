@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
-    <color name="colorRainBackground">#83D6F0</color>
-    <color name="colorRainText">#083644</color>
-    <color name="colorTemperatureBackground">#EF9A9A</color>
-    <color name="colorTemperatureText">#5C0A0A</color>
-    <color name="colorWindBackground">#9FFF97</color>
-    <color name="colorWindText">#043300</color>
-    <color name="colorUVIndexBackground">#FFC700</color>
-    <color name="colorUVIndexText">#3D3000</color>
-    <color name="chipDefault">#89000000</color>
-    <color name="windowBackgroundLight">#FFFFFF</color>
+    <color name="colorPrimary">#FAFAFA</color>
+    <color name="colorPrimaryDark">#EEEEEE</color>
+    <color name="colorAccent">#555555</color>
+
+    <!--Default Colors-->
+    <color name="colorRainBackgroundDefault">#83D6F0</color>
+    <color name="colorRainTextDefault">#083644</color>
+    <color name="colorTemperatureBackgroundDefault">#EF9A9A</color>
+    <color name="colorTemperatureTextDefault">#5C0A0A</color>
+    <color name="colorWindBackgroundDefault">#9FFF97</color>
+    <color name="colorWindTextDefault">#043300</color>
+    <color name="colorUVIndexBackgroundDefault">#FFC700</color>
+    <color name="colorUVIndexTextDefault">#3D3000</color>
+    <color name="chipDefaultDay">#89000000</color>
+    <color name="chipDefaultNight">#89FFFFFF</color>
+    <color name="windowBackgroundLight">#FAFAFA</color>
 
 </resources>

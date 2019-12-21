@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="@color/windowBackgroundLight"
+    tools:context=".ui.main.MainActivity">
 
     <ProgressBar
         android:id="@+id/loadingBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:indeterminate="true"
         android:indeterminateTint="@color/colorPrimary"
         android:visibility="gone"
@@ -19,63 +21,125 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:id="@+id/locationIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="32dp"
-        android:alpha=".54"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_location_black_24dp" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/weatherViewHolder" />
 
-    <TextView
-        android:id="@+id/locationText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:fontFamily="sans-serif-medium"
-        android:textColor="@color/chipDefault"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@+id/locationIcon"
-        app:layout_constraintStart_toEndOf="@+id/locationIcon"
-        app:layout_constraintTop_toTopOf="@+id/locationIcon"
-        tools:text="LOCATION" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/dailyRecycler"
+    <include
+        layout="@layout/scroll_layout"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:clipToPadding="false"
-        android:paddingBottom="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/bottomCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingEnd="32dp"
+            android:scrollbars="none"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/dailyChart">
+
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:paddingStart="32dp"
+                app:singleLine="true">
+
+                <com.andb.apps.weather.views.ColorableChip
+                    android:id="@+id/dailyChipSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/chip_details"
+                    android:textColor="@color/chipDefaultDay"
+                    app:chipIcon="@drawable/ic_list_black_24dp"
+                    app:chipIconSize="12dp"
+                    app:chipIconTint="@color/chipDefaultDay"
+                    app:chipStartPadding="12dp"
+                    app:chipStrokeColor="@color/chipDefaultDay"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.andb.apps.weather.views.ColorableChip
+                    android:id="@+id/dailyChipTemperature"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/temperature"
+                    android:textColor="@color/chipDefaultDay"
+                    app:chipIcon="@drawable/ic_thermostat_black_24dp"
+                    app:chipIconSize="12dp"
+                    app:chipIconTint="@color/chipDefaultDay"
+                    app:chipStartPadding="12dp"
+                    app:chipStrokeColor="@color/colorTemperatureBackgroundDefault"
+                    app:chipStrokeWidth="1dp" />
+
+
+                <com.andb.apps.weather.views.ColorableChip
+                    android:id="@+id/dailyChipRain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rain"
+                    android:textColor="@color/chipDefaultDay"
+                    app:chipIcon="@drawable/ic_raindrop_black_24dp"
+                    app:chipIconSize="12dp"
+                    app:chipIconTint="@color/chipDefaultDay"
+                    app:chipStartPadding="12dp"
+                    app:chipStrokeColor="@color/colorRainBackgroundDefault"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.andb.apps.weather.views.ColorableChip
+                    android:id="@+id/dailyChipUV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/uv_index"
+                    android:textColor="@color/chipDefaultDay"
+                    app:chipIcon="@drawable/ic_uv_index_black_24dp"
+                    app:chipIconSize="12dp"
+                    app:chipIconTint="@color/chipDefaultDay"
+                    app:chipStartPadding="12dp"
+                    app:chipStrokeColor="@color/colorUVIndexBackgroundDefault"
+                    app:chipStrokeWidth="1dp" />
+
+                <com.andb.apps.weather.views.ColorableChip
+                    android:id="@+id/dailyChipWind"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wind"
+                    android:textColor="@color/chipDefaultDay"
+                    app:chipIcon="@drawable/ic_wind_black_24dp"
+                    app:chipIconSize="12dp"
+                    app:chipIconTint="@color/chipDefaultDay"
+                    app:chipStartPadding="12dp"
+                    app:chipStrokeColor="@color/colorWindBackgroundDefault"
+                    app:chipStrokeWidth="1dp" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+    </androidx.cardview.widget.CardView>
+
+    <FrameLayout
+        android:id="@+id/fragmentHolder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:elevation="72dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/currentFeelsLike" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/currentTemperature"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:fontFamily="sans-serif-medium"
-        android:textColor="@android:color/black"
-        android:textSize="48sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/locationIcon"
-        tools:text="68°" />
-
-    <TextView
-        android:id="@+id/currentFeelsLike"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/currentTemperature"
-        tools:text="Feels Like: 70°" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

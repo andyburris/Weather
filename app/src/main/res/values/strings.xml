@@ -1,6 +1,96 @@
 <resources>
     <string name="app_name">Weather</string>
+
+    <string name="chip_details">Details</string>
+    <string name="temperature">Temperature</string>
+    <string name="rain">Rain</string>
+    <string name="uv_index">UV Index</string>
+    <string name="wind">Wind</string>
+    <string name="details_sunrise_sunset">Sunrise/Sunset</string>
+    <string name="details_humidity">Humidity</string>
+    <string name="details_moon">Moon</string>
+    <string-array name="details_moon_states">
+        <item>Waxing Crescent</item>
+        <item>Waxing Gibbous</item>
+        <item>Waning Gibbous</item>
+        <item>Waning Crescent</item>
+    </string-array>
+    <string name="next_hour">Next Hour: %1$s</string>
+
+
+    <!--Placeholders-->
     <string name="degrees_placeholder">%1$d°</string>
     <string name="feels_like_placeholder">Feels Like: %1$d°</string>
     <string name="high_low_placeholder">%1$d° | %2$d°</string>
+    <string name="minutes_placeholder">%1$d min</string>
+    <string name="percent_placeholder">%1$d%%</string>
+    <string name="max_placeholder">Max: %1$d</string>
+    <string name="max_placeholder_mph">Max: %1$dmph</string>
+
+    <string name="precip_light">Light</string>
+    <string name="precip_med">Medium</string>
+    <string name="precip_heavy">Heavy</string>
+
+    <string name="today">Today</string>
+    <string name="dark_sky_badge">Powered by Dark Sky</string>
+
+    <!--Location-->
+    <string name="location_placeholder">%1$s, %2$s</string>
+    <string name="current_location">Current Location</string>
+    <string name="search">Search</string>
+    <string name="none">None</string>
+    <string name="no_saved_locations">No saved locations</string>
+
+    <!--Network-->
+    <string name="offline_error_title">Offline</string>
+    <string name="offline_error_desc">Reconnect to the internet or check the API Key in Settings</string>
+    <string name="offline_error_refresh">Refresh</string>
+
+    <!--Settings-->
+    <string name="settings_title">Settings</string>
+    <string name="settings_api_header">API</string>
+    <string name="settings_api_key_title">API Key</string>
+    <string name="settings_api_key_desc">API Key from darksky.net/dev</string>
+    <string name="settings_units_header">Units</string>
+    <string name="settings_units_temperature">Temperature</string>
+    <string name="settings_units_distance">Distance</string>
+    <string-array name="settings_units_temp_options">
+        <item>°F</item>
+        <item>°C</item>
+    </string-array>
+    <string-array name="settings_units_distance_options">
+        <item>mi/in</item>
+        <item>km/cm</item>
+    </string-array>
+    <string name="settings_graph_header">Graphs</string>
+    <string name="settings_graph_start_time">Start Hour</string>
+    <string name="settings_graph_end_time">End Hour</string>
+
+    <string name="settings_theme_header">Theme</string>
+    <string name="settings_theme_night_mode_title">Dark Mode</string>
+    <string-array name="settings_theme_night_mode_options">
+        <item>Light</item>
+        <item>Dark</item>
+        <item>Follow Battery Saver</item>
+        <item>Follow System</item>
+        <item>Time-Based</item>
+    </string-array>
+    <string name="settings_theme_temp_desc">Color for temperature graph and chip</string>
+
+    <string name="settings_theme_rain_desc">Color for rain graph and chip</string>
+    <string name="settings_theme_uv_desc">Color for UV index graph and chip</string>
+    <string name="settings_theme_wind_desc">Color for wind graph and chip</string>
+
+    <string name="color_picker_title">Pick A Color</string>
+
+    <string name="settings_misc_header">Other</string>
+    <string name="settings_misc_about">About</string>
+    <string name="settings_misc_about_info">Info</string>
+    <string name="settings_misc_about_version">Version</string>
+    <string name="settings_misc_about_source">GitHub</string>
+    <string name="settings_misc_about_licenses">Licenses</string>
+    <string name="settings_misc_help">Help</string>
+    <string name="settings_misc_help_text">
+        • To see alternative graphs (i.e. feels like, rain amount) for each item, long press the selector
+    </string>
 </resources>

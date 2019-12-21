@@ -12,7 +12,11 @@ import kotlin.math.ceil
 import kotlin.math.min
 
 
-class BarChartRoundedRenderer(chart: BarDataProvider, animator: ChartAnimator, viewPortHandler: ViewPortHandler) :
+open class BarChartRoundedRenderer(
+    chart: BarDataProvider,
+    animator: ChartAnimator,
+    viewPortHandler: ViewPortHandler
+) :
     BarChartRenderer(chart, animator, viewPortHandler) {
 
     private val mBarShadowRectBuffer = RectF()
@@ -201,4 +205,5 @@ class BarChartRoundedRenderer(chart: BarDataProvider, animator: ChartAnimator, v
 
         return path
     }
+
 }
