@@ -13,18 +13,26 @@ import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.PreferencesAdapter
 import kotlin.random.Random
 
-class ChipPreference(key: String) : Preference(key) {
+class ChipPreference<T>(key: String, val defaultValue: T? = null) : Preference(key) {
 
-    private var chipPreferenceItems = mutableListOf<ChipPreferenceItem>()
-    var initialSelectValue = ""
+    /** Function to save value if it is not one of default supported types (String, Int, or Boolean) */
+    var customSave: ((value: T) -> Unit)? = null
+    /** Function to load value if it is not one of default supported types (String, Int, or Boolean) */
+    var customGet: ((key: String, defaultValue: T?) -> T)? = null
+
+    private var chipPreferenceItems = mutableListOf<ChipPreferenceItem<T>>()
     private var selectedId = View.NO_ID
 
-    fun addChip(value: String, label: String, color: Int) {
+    fun addChip(value: T, label: String, color: Int) {
+        chipPreferenceItems.add(ChipPreferenceItem(chipID(), value, label, color))
+    }
+
+    private fun chipID(): Int {
         var id = Random.nextInt()
         while (chipPreferenceItems.any { it.id == id }) {
             id = Random.nextInt()
         }
-        chipPreferenceItems.add(ChipPreferenceItem(id, value, label, color))
+        return id
     }
 
     override fun bindViews(holder: PreferencesAdapter.ViewHolder) {
@@ -61,15 +69,29 @@ class ChipPreference(key: String) : Preference(key) {
                         "chipPrefCheckChange",
                         "id: $id, chipIds: ${chipPreferenceItems.map { it.id }}"
                     )
-                    commitString(chipPreferenceItems.first { it.id == id }.value)
+                    val chipPreferenceItem = chipPreferenceItems.first { it.id == id }
+                    when (chipPreferenceItem.value) {
+                        is String -> commitString(chipPreferenceItem.value)
+                        is Int -> commitInt(chipPreferenceItem.value)
+                        is Boolean -> commitBoolean(chipPreferenceItem.value)
+                        else -> customSave?.invoke(chipPreferenceItem.value)
+                    }
                     selectedId = id
                 } else {
                     chipGroup.check(selectedId)
                 }
             }
 
-            val selected =
-                chipPreferenceItems.indexOfFirst { it.value == getString(initialSelectValue) }
+            val initialSelect = when (defaultValue) {
+                is String -> getString(defaultValue)
+                is Int -> getInt(defaultValue)
+                is Boolean -> getBoolean(defaultValue)
+                else -> customGet?.invoke(key, defaultValue)
+            }
+            Log.d("chipPreference", "initialSelect: $initialSelect")
+            val selected = chipPreferenceItems.indexOfFirst {
+                it.value == initialSelect
+            }.coerceAtLeast(0)
             selectedId = chipPreferenceItems[selected].id
             check(selectedId)
         }
@@ -78,10 +100,19 @@ class ChipPreference(key: String) : Preference(key) {
     override fun getWidgetLayoutResource(): Int = R.layout.settings_chips_item
 }
 
-private class ChipPreferenceItem(val id: Int, val value: String, val label: String, val color: Int)
+private open class ChipPreferenceItem<T>(
+    val id: Int,
+    val value: T,
+    val label: String,
+    val color: Int
+)
 
 // Preference DSL functions
-inline fun PreferenceScreen.Builder.chips(key: String, block: ChipPreference.() -> Unit) {
-    addPreferenceItem(ChipPreference(key).apply(block))
+inline fun <T> PreferenceScreen.Builder.chips(
+    key: String,
+    defaultValue: T? = null,
+    block: ChipPreference<T>.() -> Unit
+) {
+    addPreferenceItem(ChipPreference<T>(key, defaultValue).apply(block))
 }
 

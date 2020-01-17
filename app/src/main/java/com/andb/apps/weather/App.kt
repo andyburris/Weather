@@ -16,12 +16,16 @@ import com.andb.apps.weather.ui.location.LocationPickerFragment
 import com.andb.apps.weather.ui.location.LocationPickerViewModel
 import com.andb.apps.weather.ui.main.WeatherViewModel
 import com.andb.apps.weather.ui.settings.SettingsFragment
+import com.andb.apps.weather.ui.settings.SettingsLayout
+import com.andb.apps.weather.ui.settings.SettingsViewModel
+import com.chibatching.kotpref.Kotpref
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.jakewharton.threetenabp.AndroidThreeTen
 import com.squareup.moshi.Moshi
+import de.Maxr1998.modernpreferences.PreferencesAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -68,6 +72,7 @@ class App : Application() {
 
         viewModel { WeatherViewModel(get(), get()) }
         viewModel { LocationPickerViewModel(get()) }
+        viewModel { SettingsViewModel(PreferencesAdapter(SettingsLayout.create(androidContext()))) }
 
         single { SettingsFragment() }
         single { LocationPickerFragment() }
@@ -82,7 +87,7 @@ class App : Application() {
             modules(koinModule)
         }
         AndroidThreeTen.init(this)
-        Prefs.init(applicationContext)
+        Kotpref.init(this)
         AppCompatDelegate.setDefaultNightMode(Prefs.nightMode)
     }
 }

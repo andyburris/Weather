@@ -6,13 +6,15 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.map
 import com.andb.apps.weather.data.local.Prefs
-import com.andb.apps.weather.data.model.*
+import com.andb.apps.weather.data.model.DarkSkyRequest
+import com.andb.apps.weather.data.model.DayItem
+import com.andb.apps.weather.data.model.Location
+import com.andb.apps.weather.data.model.WeatherIcon
 import com.andb.apps.weather.data.repository.DarkSkyRepo
 import com.andb.apps.weather.data.repository.LocationRepo
 import com.andb.apps.weather.util.InitialLiveData
 import com.andb.apps.weather.util.mapAsync
 import com.andb.apps.weather.util.notNull
-import org.threeten.bp.ZoneOffset
 
 class WeatherViewModel(
     private val darkSkyRepo: DarkSkyRepo,
@@ -31,26 +33,22 @@ class WeatherViewModel(
     private val currentRequest: LiveData<DarkSkyRequest> = lastRequest.notNull()
 
 
-    val locationName: LiveData<String> =
-        location.map { it?.let { "${it.name}, ${it.region}" } ?: "" }
-    val currentTemp: LiveData<Int> =
-        Transformations.map(currentRequest) { return@map it.currently.temperature.toInt() }
-    val currentFeelsLike: LiveData<Int> =
-        Transformations.map(currentRequest) { return@map it.currently.apparentTemperature.toInt() }
+    val locationName = location.map { it?.let { "${it.name}, ${it.region}" } ?: "" }
+    val currentTemp = Transformations.map(currentRequest) { it.currently.temperature.toInt() }
+    val currentFeelsLike =
+        Transformations.map(currentRequest) { it.currently.apparentTemperature.toInt() }
     val currentBackground: LiveData<Pair<WeatherIcon, Boolean>> =
         Transformations.map(currentRequest) {
             val isDay =
                 it.daily.data[0].sunriseTime < it.currently.time && it.currently.time < it.daily.data[0].sunsetTime
             return@map Pair(it.currently.icon, isDay)
         }
-    val minutely: LiveData<Pair<Minutely, ZoneOffset>> =
-        Transformations.map(currentRequest) { return@map Pair(it.minutely, it.timezone) }
+    val minutely = Transformations.map(currentRequest) { Pair(it.minutely, it.timezone) }
     val dailyForecasts: LiveData<List<DayItem>> = Transformations.map(currentRequest) { request ->
         return@map request.daily.data.map { conditions ->
             val hourly = request.hourly.data.filter {
-                it.time.dayOfMonth == conditions.time.dayOfMonth && (Prefs.dayStart..Prefs.dayEnd).contains(
-                    it.time.hour
-                )
+                it.time.dayOfMonth == conditions.time.dayOfMonth
+                        && (Prefs.dayStart..Prefs.dayEnd).contains(it.time.hour)
             }
             DayItem(conditions, hourly, request.timezone)
         }

@@ -9,13 +9,13 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.transition.TransitionManager
 import com.andb.apps.weather.R
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.Minutely
 import com.andb.apps.weather.util.dp
 import com.andb.apps.weather.util.dpToPx
+import com.andb.apps.weather.util.getColorCompat
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.MarkerView
@@ -66,7 +66,7 @@ class MinutelyView : ConstraintLayout {
                 axisLineWidth = 0f
                 typeface = Typeface.DEFAULT_BOLD
                 textSize = 10f
-                textColor = ContextCompat.getColor(context, R.color.colorPrimary)
+                textColor = context.getColorCompat(R.color.colorPrimary)
                 setDrawAxisLine(false)
                 valueFormatter = MinuteValueFormatter(context)
                 setAvoidFirstLastClipping(true)
@@ -77,18 +77,18 @@ class MinutelyView : ConstraintLayout {
                 setLabelCount(3, true)
                 axisMaximum = .4f
                 axisMinimum = 0f
-                textColor = ContextCompat.getColor(context, R.color.colorPrimary)
+                textColor = context.getColorCompat(R.color.colorPrimary)
                 setDrawAxisLine(false)
                 valueFormatter = IntensityValueFormatter(context, axisMinimum, axisMaximum)
                 addLimitLine(LimitLine(axisMaximum / 3).also {
                     it.enableDashedLine(8.dp.toFloat(), 8.dp.toFloat(), 0f)
                     it.lineColor =
-                        ContextCompat.getColor(context, R.color.colorRainBackgroundDefault)
+                        context.getColorCompat(R.color.colorRainBackgroundDefault)
                 })
                 addLimitLine(LimitLine(axisMaximum / 3 * 2).also {
                     it.enableDashedLine(8.dp.toFloat(), 8.dp.toFloat(), 0f)
                     it.lineColor =
-                        ContextCompat.getColor(context, R.color.colorRainBackgroundDefault)
+                        context.getColorCompat(R.color.colorRainBackgroundDefault)
                 })
             }
 
@@ -137,7 +137,7 @@ class MinutelyView : ConstraintLayout {
             it.setDrawCircles(false)
             //it.color = ContextCompat.getColor(requireContext(), R.color.colorRainBackgroundDefault)
             it.cubicIntensity = .2f
-            it.fillColor = ContextCompat.getColor(context, R.color.colorRainBackgroundDefault)
+            it.fillColor = context.getColorCompat(R.color.colorRainBackgroundDefault)
             it.fillAlpha = 255
             it.setDrawFilled(true)
             it.setFillFormatter { dataSet, dataProvider ->
@@ -145,7 +145,7 @@ class MinutelyView : ConstraintLayout {
             }
             it.setDrawValues(false)
             it.highlightLineWidth = dpToPx(2).toFloat()
-            it.highLightColor = ContextCompat.getColor(context, R.color.colorRainTextDefault)
+            it.highLightColor = context.getColorCompat(R.color.colorRainTextDefault)
             it.setDrawHorizontalHighlightIndicator(false)
         }
 

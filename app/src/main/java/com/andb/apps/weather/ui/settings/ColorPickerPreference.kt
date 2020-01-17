@@ -4,6 +4,7 @@ import android.graphics.Color
 import com.afollestad.materialdialogs.color.ColorPalette
 import com.afollestad.materialdialogs.color.colorChooser
 import com.andb.apps.weather.R
+import de.Maxr1998.modernpreferences.PreferenceScreen
 import de.Maxr1998.modernpreferences.PreferencesAdapter
 
 class ColorPickerPreference(key: String) : DialogPreference(key) {
@@ -39,4 +40,12 @@ class ColorPickerPreference(key: String) : DialogPreference(key) {
     }
 
     override fun getWidgetLayoutResource(): Int = R.layout.settings_color_item
+}
+
+// Preference DSL functions
+inline fun PreferenceScreen.Builder.colorPicker(
+    key: String,
+    block: ColorPickerPreference.() -> Unit
+) {
+    addPreferenceItem(ColorPickerPreference(key).apply(block))
 }

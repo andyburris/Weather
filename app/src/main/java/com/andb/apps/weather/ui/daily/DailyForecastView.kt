@@ -29,6 +29,7 @@ import com.github.rongi.klaster.Klaster
 import kotlinx.android.synthetic.main.daily_card.view.*
 import kotlinx.android.synthetic.main.details_item.view.*
 import org.threeten.bp.LocalDateTime
+import org.threeten.bp.OffsetDateTime
 import org.threeten.bp.ZoneOffset
 import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.TextStyle
@@ -51,8 +52,7 @@ class DailyForecastView : ConstraintLayout {
     private var feelsLikeVals = listOf<Int>()
     private var uvVals = listOf<Int>()
     private var windVals = listOf<Pair<Int, Int>>()
-    private var labels = listOf<String>()
-    //private var labels = listOf("7AM", "8AM", "9AM", "10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM", "6PM", "7PM", "8PM", "9PM", "10PM", "11PM", "12AM")
+    private var labels = listOf<OffsetDateTime>()
 
     init {
         inflate(context, R.layout.daily_card, this)
@@ -73,10 +73,7 @@ class DailyForecastView : ConstraintLayout {
         feelsLikeVals = hourlyData.map { it.apparentTemperature.toInt() }
         uvVals = hourlyData.map { it.uvIndex }
         windVals = hourlyData.map { Pair(it.windSpeed.toInt(), it.windBearing) }
-        val formatter = DateTimeFormatter.ofPattern("ha")//TODO: 24hr option ("H")
-        labels = hourlyData.map {
-            it.time.atOffset(timeZone).format(formatter)
-        }
+        labels = hourlyData.map { it.time.atOffset(timeZone) }
 
         setupChart()
 
@@ -136,8 +133,7 @@ class DailyForecastView : ConstraintLayout {
 
     private fun setTemperature(animate: Boolean) {
         setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter =
-            DegreesValueFormatter()
+        dailyChart.data.getDataSetByIndex(0).valueFormatter = DegreesValueFormatter()
         (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
         dailyChart.animateChange(getList(tempVals), animate = animate) {
             newMax = (tempVals.maxBy { it } ?: 0) + 5
@@ -149,8 +145,7 @@ class DailyForecastView : ConstraintLayout {
 
     private fun setFeelsLike(animate: Boolean) {
         setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter =
-            DegreesValueFormatter()
+        dailyChart.data.getDataSetByIndex(0).valueFormatter = DegreesValueFormatter()
         (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
         dailyChart.animateChange(getList(feelsLikeVals), animate = animate) {
             newMax = (feelsLikeVals.maxBy { it } ?: 0) + 5
@@ -163,8 +158,7 @@ class DailyForecastView : ConstraintLayout {
 
     private fun setRainPercent(animate: Boolean) {
         setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter =
-            RainPercentValueFormatter()
+        dailyChart.data.getDataSetByIndex(0).valueFormatter = RainPercentValueFormatter()
         (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
         dailyChart.animateChange(getList(rainPercentVals), animate = animate) {
             newMax = 100 + 8
@@ -218,6 +212,13 @@ class DailyForecastView : ConstraintLayout {
         colors =
             listOf(Prefs.colorTemperature, Prefs.colorRain, Prefs.colorUVIndex, Prefs.colorWind)
         changeDisplay(selected)
+        if (selected == 0) {
+            dailyDetailsRecycler.adapter?.notifyDataSetChanged()
+        }
+    }
+
+    fun syncScroll() {
+
     }
 
     private fun setupChart() {
@@ -281,7 +282,7 @@ class DailyForecastView : ConstraintLayout {
         }
     }
 
-    fun detailsAdapter(conditions: DailyConditions) = Klaster.get()
+    private fun detailsAdapter(conditions: DailyConditions) = Klaster.get()
         .itemCount(6)
         .view(R.layout.details_item, LayoutInflater.from(context))
         .bind { pos ->

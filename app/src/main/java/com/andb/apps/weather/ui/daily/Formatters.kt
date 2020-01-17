@@ -3,6 +3,8 @@ package com.andb.apps.weather.ui.daily
 import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import org.threeten.bp.OffsetDateTime
+import org.threeten.bp.format.DateTimeFormatter
 import kotlin.math.max
 
 open class PercentValueFormatter : ValueFormatter() {
@@ -42,12 +44,14 @@ class MPHValueFormatter : ValueFormatter() {
 }
 
 
-class TimeValueFormatter(private val labels: List<String>) : ValueFormatter() {
+class TimeValueFormatter(private val labels: List<OffsetDateTime>) : ValueFormatter() {
+    private val formatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("ha")//TODO: 24hr option ("H")
     override fun getAxisLabel(value: Float, axis: AxisBase?): String {
         if (value.toInt() >= labels.size) {
             return "Error"
         }
-        return labels[value.toInt()]
+        return labels[value.toInt()].format(formatter)
         //return super.getAxisLabel(value, axis)
     }
 }

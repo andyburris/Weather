@@ -6,24 +6,26 @@ import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import com.afollestad.materialdialogs.datetime.timePicker
+import com.afollestad.materialdialogs.customview.customView
 import com.afollestad.materialdialogs.input.input
 import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.andb.apps.weather.BuildConfig
 import com.andb.apps.weather.R
-import com.andb.apps.weather.data.local.Prefs
+import com.andb.apps.weather.data.local.*
+import com.andb.apps.weather.util.getColorCompat
 import de.Maxr1998.modernpreferences.helpers.*
 import org.threeten.bp.LocalTime
 import org.threeten.bp.format.DateTimeFormatter
-import java.util.*
 
 object SettingsLayout {
     fun create(context: Context) = screen(context) {
+        preferenceFileName = KEY_SHAREDPREFS_NAME
+
         titleRes = R.string.settings_title
         categoryHeader("api_header") {
             titleRes = R.string.settings_api_header
         }
-        dialog(Prefs.KEY_API_KEY) {
+        dialog(KEY_API_KEY) {
             titleRes = R.string.settings_api_key_title
             summaryRes = R.string.settings_api_key_desc
             iconRes = R.drawable.ic_network_black_24dp
@@ -44,72 +46,68 @@ object SettingsLayout {
             titleRes = R.string.settings_units_header
         }
 
-        chips(Prefs.KEY_UNIT_TEMP) {
+        chips<String>(KEY_UNIT_TEMP, "unit_temp_imperial") {
             titleRes = R.string.settings_units_temperature
             iconRes = R.drawable.ic_thermostat_black_24dp
             val items = context.resources.getStringArray(R.array.settings_units_temp_options)
-            addChip(
-                "unit_temp_imperial",
-                items[0],
-                ContextCompat.getColor(context, R.color.colorAccent)
-            )
-            addChip(
-                "unit_temp_metric",
-                items[1],
-                ContextCompat.getColor(context, R.color.colorAccent)
-            )
-            initialSelectValue = "unit_temp_imperial"
+            addChip("unit_temp_imperial", items[0], context.getColorCompat(R.color.colorAccent))
+            addChip("unit_temp_metric", items[1], context.getColorCompat(R.color.colorAccent))
         }
 
-        chips(Prefs.KEY_UNIT_DISTANCE) {
+        chips<String>(KEY_UNIT_DISTANCE, "unit_distance_imperial") {
             titleRes = R.string.settings_units_distance
             iconRes = R.drawable.ic_tape_measure
             val items = context.resources.getStringArray(R.array.settings_units_distance_options)
-            addChip(
-                "unit_distance_imperial",
-                items[0],
-                ContextCompat.getColor(context, R.color.colorAccent)
-            )
-            addChip(
-                "unit_distance_metric",
-                items[1],
-                ContextCompat.getColor(context, R.color.colorAccent)
-            )
-            initialSelectValue = "unit_distance_imperial"
+            addChip("unit_distance_imperial", items[0], context.getColorCompat(R.color.colorAccent))
+            addChip("unit_distance_metric", items[1], context.getColorCompat(R.color.colorAccent))
+        }
+
+        chips<Boolean>(KEY_UNIT_TIME, false) {
+            titleRes = R.string.settings_units_time
+            iconRes = R.drawable.ic_access_time_black_24dp
+            val items = context.resources.getStringArray(R.array.settings_units_time_options)
+            addChip(false, items[0], context.getColorCompat(R.color.colorAccent))
+            addChip(true, items[1], context.getColorCompat(R.color.colorAccent))
         }
 
         categoryHeader("graph_header") {
             titleRes = R.string.settings_graph_header
         }
 
-        dialog(Prefs.KEY_DAY_START) {
+        dialog(KEY_DAY_START) {
             titleRes = R.string.settings_graph_start_time
             iconRes = R.drawable.ic_weather_sunset
-            val currentTime = LocalTime.of(getInt(7), 0)
-            summary = DateTimeFormatter.ofPattern("ha").format(currentTime)
+            summary = DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayStart, 0))
             contents {
-                timePicker(
-                    currentTime = Calendar.getInstance().also { it.time },
-                    show24HoursView = false
-                ) { dialog, datetime ->
-                    commitInt(datetime.get(Calendar.HOUR_OF_DAY))
+                val picker = HourPicker(context)
+                customView(view = picker, noVerticalPadding = true)
+                picker.is24Hour = Prefs.time24HrFormat
+                picker.selectedHour = Prefs.dayStart
+                this.positiveButton {
+                    commitInt(picker.selectedHour)
+                    summary =
+                        DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayStart, 0))
                     requestRebind()
+                    it.dismiss()
                 }
             }
         }
 
-        dialog(Prefs.KEY_DAY_END) {
+        dialog(KEY_DAY_END) {
             titleRes = R.string.settings_graph_end_time
             iconRes = R.drawable.ic_weather_sunset
-            val currentTime = LocalTime.of(getInt(23), 0)
-            summary = DateTimeFormatter.ofPattern("ha").format(currentTime)
+            summary = DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayEnd, 0))
             contents {
-                timePicker(
-                    currentTime = Calendar.getInstance().also { it.time },
-                    show24HoursView = false
-                ) { dialog, datetime ->
-                    commitInt(datetime.get(Calendar.HOUR_OF_DAY))
+                val picker = HourPicker(context)
+                customView(view = picker, noVerticalPadding = true)
+                picker.is24Hour = Prefs.time24HrFormat
+                picker.selectedHour = Prefs.dayEnd
+                this.positiveButton {
+                    commitInt(picker.selectedHour)
+                    summary =
+                        DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayEnd, 0))
                     requestRebind()
+                    it.dismiss()
                 }
             }
         }
@@ -119,7 +117,7 @@ object SettingsLayout {
             titleRes = R.string.settings_theme_header
         }
 
-        dialog(Prefs.KEY_NIGHT_MODE) {
+        dialog(KEY_NIGHT_MODE) {
             titleRes = R.string.settings_theme_night_mode_title
             iconRes = R.drawable.ic_weather_night
             contents {
@@ -157,7 +155,7 @@ object SettingsLayout {
             }
         }
 
-        custom<ColorPickerPreference>(Prefs.KEY_COLOR_TEMP) {
+        colorPicker(KEY_COLOR_TEMP) {
             titleRes = R.string.temperature
             summaryRes = R.string.settings_theme_temp_desc
             iconRes = R.drawable.ic_thermostat_black_24dp
@@ -170,31 +168,31 @@ object SettingsLayout {
                 )
             }
         }
-        custom<ColorPickerPreference>(Prefs.KEY_COLOR_RAIN) {
+        colorPicker(KEY_COLOR_RAIN) {
             titleRes = R.string.rain
             summaryRes = R.string.settings_theme_rain_desc
             iconRes = R.drawable.ic_raindrop_black_24dp
             onSelect = {
                 Prefs.colorRain =
-                    getInt(ContextCompat.getColor(context, R.color.colorRainBackgroundDefault))
+                    getInt(context.getColorCompat(R.color.colorRainBackgroundDefault))
             }
         }
-        custom<ColorPickerPreference>(Prefs.KEY_COLOR_UV) {
+        colorPicker(KEY_COLOR_UV) {
             titleRes = R.string.uv_index
             summaryRes = R.string.settings_theme_uv_desc
             iconRes = R.drawable.ic_uv_index_black_24dp
             onSelect = {
                 Prefs.colorUVIndex =
-                    getInt(ContextCompat.getColor(context, R.color.colorUVIndexBackgroundDefault))
+                    getInt(context.getColorCompat(R.color.colorUVIndexBackgroundDefault))
             }
         }
-        custom<ColorPickerPreference>(Prefs.KEY_COLOR_WIND) {
+        colorPicker(KEY_COLOR_WIND) {
             titleRes = R.string.wind
             summaryRes = R.string.settings_theme_wind_desc
             iconRes = R.drawable.ic_wind_black_24dp
             onSelect = {
                 Prefs.colorWind =
-                    getInt(ContextCompat.getColor(context, R.color.colorWindBackgroundDefault))
+                    getInt(context.getColorCompat(R.color.colorWindBackgroundDefault))
             }
         }
 

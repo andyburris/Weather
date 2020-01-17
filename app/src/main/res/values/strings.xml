@@ -53,14 +53,19 @@
     <string name="settings_api_key_desc">API Key from darksky.net/dev</string>
     <string name="settings_units_header">Units</string>
     <string name="settings_units_temperature">Temperature</string>
-    <string name="settings_units_distance">Distance</string>
     <string-array name="settings_units_temp_options">
         <item>°F</item>
         <item>°C</item>
     </string-array>
+    <string name="settings_units_distance">Distance</string>
     <string-array name="settings_units_distance_options">
         <item>mi/in</item>
         <item>km/cm</item>
+    </string-array>
+    <string name="settings_units_time">Time Format</string>
+    <string-array name="settings_units_time_options">
+        <item>12hr</item>
+        <item>24hr</item>
     </string-array>
     <string name="settings_graph_header">Graphs</string>
     <string name="settings_graph_start_time">Start Hour</string>

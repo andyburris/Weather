@@ -6,14 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
-import androidx.lifecycle.get
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andb.apps.weather.R
 import kotlinx.android.synthetic.main.settings_layout.*
+import org.koin.android.viewmodel.ext.android.viewModel
 
 class SettingsFragment : Fragment() {
-    private lateinit var viewModel: SettingsViewModel
+    private val viewModel: SettingsViewModel by viewModel()
     private val preferencesAdapter get() = viewModel.adapter
 
     override fun onCreateView(
@@ -27,7 +26,6 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get()
         settingsRecycler.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = preferencesAdapter
@@ -36,6 +34,6 @@ class SettingsFragment : Fragment() {
         Log.d("settingsFragment", "adapter: ${settingsRecycler.adapter}")
     }
 
-    fun backPossible() = viewModel.adapter.isInSubScreen()
+    fun backPossible() = this.isAdded && viewModel.adapter.isInSubScreen()
     fun goBack() = viewModel.adapter.goBack()
 }

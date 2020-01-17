@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.assent.Permission
 import com.afollestad.assent.runWithPermissions
 import com.andb.apps.weather.R
-import com.andb.apps.weather.TestFragment
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.DayItem
 import com.andb.apps.weather.ui.daily.DailyForecastView
@@ -28,6 +27,7 @@ import com.andb.apps.weather.ui.location.LocationPickerFragment
 import com.andb.apps.weather.ui.main.weatherView.MaterialWeatherView
 import com.andb.apps.weather.ui.main.weatherView.WeatherView
 import com.andb.apps.weather.ui.settings.SettingsFragment
+import com.andb.apps.weather.ui.test.TestFragment
 import com.andb.apps.weather.util.*
 import com.github.rongi.klaster.Klaster
 import kotlinx.android.synthetic.main.activity_main.*
@@ -109,11 +109,7 @@ class MainActivity : AppCompatActivity() {
         )
         }
         viewModel.offline.observe(this) {
-            if (it) {
-                offlineItem.visibility = View.VISIBLE
-            } else {
-                offlineItem.visibility = View.GONE
-            }
+            offlineItem.visibility = if (it) View.VISIBLE else View.GONE
         }
         viewModel.locationName.observe(this) { locationText.text = it }
         viewModel.currentTemp.observe(this) {
@@ -124,11 +120,8 @@ class MainActivity : AppCompatActivity() {
             )
         }
         viewModel.currentFeelsLike.observe(this) {
-            currentFeelsLike.text = String.format(
-                resources.getString(
-                    R.string.feels_like_placeholder
-                ), it
-            )
+            currentFeelsLike.text =
+                String.format(resources.getString(R.string.feels_like_placeholder), it)
         }
         viewModel.currentBackground.observe(this) { weatherView.setWeather(it.first, it.second) }
         viewModel.minutely.observe(this) { minutelyView.setup(it.first, it.second) }
@@ -167,7 +160,7 @@ class MainActivity : AppCompatActivity() {
         minutelyView.onTouch = { action ->
             if (action == MotionEvent.ACTION_UP) {
                 //nestedScrollView.startNestedScroll(ViewCompat.SCROLL_AXIS_HORIZONTAL)
-                Log.d("scrollingOnTouch", "truert")
+                Log.d("scrollingOnTouch", "true")
                 nestedScrollView.setScrollingEnabled(true)
             } else {
                 //nestedScrollView.stopNestedScroll()
@@ -175,7 +168,6 @@ class MainActivity : AppCompatActivity() {
                 nestedScrollView.setScrollingEnabled(false)
             }
         }
-
 
     }
 
@@ -236,13 +228,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val chipList by lazy {
-        listOf(
-            dailyChipSummary,
-            dailyChipTemperature,
-            dailyChipRain,
-            dailyChipUV,
-            dailyChipWind
-        )
+        listOf(dailyChipSummary, dailyChipTemperature, dailyChipRain, dailyChipUV, dailyChipWind)
     }
     private lateinit var colors: List<Pair<Int, Int>>
     private fun selectChip(
@@ -268,10 +254,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (updateGraphs) {
-            dailyAdapter.notifyItemRangeChanged(
-                0, dayList.size,
-                PAYLOAD_CHIP_CHANGE
-            )
+            dailyAdapter.notifyItemRangeChanged(0, dayList.size, PAYLOAD_CHIP_CHANGE)
         }
     }
 
@@ -291,20 +274,21 @@ class MainActivity : AppCompatActivity() {
             this.setIsRecyclable(false)
         }
         .bind { position, payloads ->
-            if (payloads.isEmpty()) {
-                val item = dayList[position]
-                (itemView as DailyForecastView).setupData(
-                    selectedChip,
-                    item.day,
-                    item.hourly,
-                    item.timeZone
-                )
-            } else {
-                if (payloads[0] == PAYLOAD_COLOR_CHANGE) {
-                    (itemView as DailyForecastView).refreshColors(selectedChip)
-                } else {
-                    (itemView as DailyForecastView).changeDisplay(selectedChip)
+            when {
+                payloads.isEmpty() -> {
+                    val item = dayList[position]
+                    (itemView as DailyForecastView).setupData(
+                        selectedChip,
+                        item.day,
+                        item.hourly,
+                        item.timeZone
+                    )
                 }
+                payloads[0] == PAYLOAD_COLOR_CHANGE -> (itemView as DailyForecastView).refreshColors(
+                    selectedChip
+                )
+                payloads[0] == PAYLOAD_SCROLL_SYNC -> (itemView as DailyForecastView).syncScroll()
+                else -> (itemView as DailyForecastView).changeDisplay(selectedChip)
             }
         }
         .build()
@@ -315,6 +299,7 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.backStackEntryCount > 0 -> {
                 supportFragmentManager.popBackStack()
                 refreshColors()
+                refreshTimeRange()
             }
             else -> super.onBackPressed()
         }
@@ -322,14 +307,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshColors() {
         setupChips()
-        dailyAdapter.notifyItemRangeChanged(
-            0, dayList.size,
-            PAYLOAD_COLOR_CHANGE
-        )
+        dailyAdapter.notifyItemRangeChanged(0, dayList.size, PAYLOAD_COLOR_CHANGE)
+    }
+
+    private fun refreshTimeRange() {
+        val currentHourly = viewModel.dailyForecasts.value?.get(1)?.hourly ?: return
+        val needToRefreshStart = currentHourly.firstOrNull()?.time?.hour != Prefs.dayStart
+        val needToRefreshEnd = currentHourly.lastOrNull()?.time?.hour != Prefs.dayEnd
+        if (needToRefreshStart || needToRefreshEnd) {
+            viewModel.refresh()
+        }
     }
 
     companion object {
         private const val PAYLOAD_COLOR_CHANGE = 34325
+        private const val PAYLOAD_SCROLL_SYNC = 34325
         private const val PAYLOAD_CHIP_CHANGE = 98712
     }
 }

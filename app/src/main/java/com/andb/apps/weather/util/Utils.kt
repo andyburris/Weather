@@ -6,7 +6,6 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
-import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -102,8 +101,17 @@ fun dpToPx(dp: Int): Int {
     return (dp * scale).toInt()
 }
 
+fun spToPx(sp: Int): Float {
+    val scale = Resources.getSystem().displayMetrics.density
+    val size = Resources.getSystem().configuration.fontScale
+    return sp * scale * size
+}
+
 val Int.dp
     get() = dpToPx(this)
+
+val Int.sp
+    get() = spToPx(this)
 
 fun statusBarHeight(resources: Resources): Int {
     val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
@@ -113,23 +121,14 @@ fun statusBarHeight(resources: Resources): Int {
 fun chipTextFrom(color: Int): Int {
     val hsv = FloatArray(3)
     Color.colorToHSV(color, hsv)
-
-    Log.d("chipTextFrom", "original hsv: [${hsv[0]}, ${hsv[1]}, ${hsv[2]}]")
-
+    //Log.d("chipTextFrom", "original hsv: [${hsv[0]}, ${hsv[1]}, ${hsv[2]}]")
     when {
         hsv[2] >= .60 -> hsv[2] = .10f
         hsv[2] < .60 -> hsv[2] = .90f
     }
-
-    Log.d("chipTextFrom", "new hsv: [${hsv[0]}, ${hsv[1]}, ${hsv[2]}]")
-
+    //Log.d("chipTextFrom", "new hsv: [${hsv[0]}, ${hsv[1]}, ${hsv[2]}]")
     val newColor = Color.HSVToColor(hsv)
-
-    Log.d(
-        "chipTextFrom",
-        "original color: #${color.toHexString()}, new color: #${newColor.toHexString()}"
-    )
-
+    //Log.d("chipTextFrom", "original color: #${color.toHexString()}, new color: #${newColor.toHexString()}")
     return newColor
 }
 
@@ -207,3 +206,5 @@ fun <T> MutableList<T>.reset(with: Collection<T>) {
     this.clear()
     this.addAll(with)
 }
+
+infix fun <T> T.and(other: T) = listOf(this, other)
