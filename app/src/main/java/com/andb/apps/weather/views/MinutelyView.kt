@@ -30,7 +30,6 @@ import com.github.mikephil.charting.utils.MPPointF
 import kotlinx.android.synthetic.main.minutely_layout.view.*
 import kotlinx.android.synthetic.main.rain_marker_view.view.*
 import org.threeten.bp.ZoneOffset
-import kotlin.random.Random
 
 class MinutelyView : ConstraintLayout {
     constructor(context: Context) : super(context)
@@ -112,22 +111,15 @@ class MinutelyView : ConstraintLayout {
     }
 
     @SuppressLint("SetTextI18n")
-    fun setup(minutely: Minutely?, offset: ZoneOffset?) {
-        if (minutely != null && offset != null) {
-            val values = minutely.data.mapIndexed { index, minutelyConditions ->
-                Entry(index.toFloat(), minutelyConditions.precipIntensity.toFloat())
-            }
-            populateChart(values)
-            minutelyTitle.apply {
-                text = String.format(context.getString(R.string.next_hour), minutely.summary)
-
-                val toCollapse = (values.maxBy { it.y }?.y ?: 0f) < 0.05f
-                toggle(toCollapse, animate = true)
-
-            }
-
-        } else {
-            populateChart(randomEntries())
+    fun setup(minutely: Minutely, offset: ZoneOffset) {
+        val values = minutely.data.mapIndexed { index, minutelyConditions ->
+            Entry(index.toFloat(), minutelyConditions.precipIntensity.toFloat())
+        }
+        populateChart(values)
+        minutelyTitle.apply {
+            text = minutely.summary
+            val toCollapse = (values.maxBy { it.y }?.y ?: 0f) < 0.05f
+            toggle(toCollapse, animate = true)
         }
     }
 
@@ -186,24 +178,9 @@ class MinutelyView : ConstraintLayout {
         mCollapsed = toCollapse
     }
 
-    fun collapsedHeight() = minutelyCollapseTarget.height
+    private fun collapsedHeight() = minutelyCollapseTarget.height
+    private fun expandedHeight() = collapsedHeight() + dpToPx(120) + dpToPx(16)
 
-    //fun expandedHeight() = minutelyCollapseTarget.height + minutelyChartHolder.height + dpToPx(16)
-    fun expandedHeight() = collapsedHeight() + dpToPx(120) + dpToPx(
-        16
-    )
-
-    fun randomEntries(): List<Entry> {
-        var amt = Random.nextFloat()
-        val precipAmts = mutableListOf<Float>()
-        for (i in 0..60) {
-            val newAmt = (amt + (Random.nextFloat() / 5 * Random.nextSign())).coerceIn(0f, .4f)
-            precipAmts.add(newAmt)
-            amt = newAmt
-        }
-
-        return precipAmts.mapIndexed { index, fl -> Entry(index.toFloat(), fl) }
-    }
 }
 
 
@@ -265,9 +242,4 @@ private class RainMarkerView(context: Context) : MarkerView(context, R.layout.ra
         draw(canvas)
         canvas?.translate(-newX, -newY)
     }
-}
-
-private fun Random.nextSign(): Int {
-    val seed = nextBoolean()
-    return if (seed) -1 else 1
 }

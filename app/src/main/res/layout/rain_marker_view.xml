@@ -18,14 +18,18 @@
             android:id="@+id/rainMarkerTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:singleLine="true"
             android:text="20 mins"
-            android:textColor="@color/colorPrimary" />
+            android:textColor="@color/colorPrimary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/rainMarkerAmount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0.005 in"
+            android:singleLine="true"
+            android:text="0.0004 in"
             android:textColor="@color/colorPrimary" />
     </LinearLayout>
 

@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.get
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -129,15 +130,18 @@ class MainActivity : AppCompatActivity() {
             dayList = it
             dailyAdapter.notifyDataSetChanged()
             dailyRecycler.doOnNextLayout {
-                val itemHeight = (dailyRecycler.layoutManager?.findViewByPosition(0)?.height
-                    ?: 0)
+                val itemHeight = dailyRecycler.layoutManager?.findViewByPosition(0)?.height ?: 0
                 Log.d("cardOffset", "itemHeight: $itemHeight")
                 currentTemperature.layoutParams =
                     (currentTemperature.layoutParams as ConstraintLayout.LayoutParams).also {
                         it.topMargin =
-                            Resources.getSystem().displayMetrics.heightPixels - itemHeight - dpToPx(
-                                16 + 8 + 8
-                            ) - currentFeelsLike.height - currentTemperature.height - bottomCard.height - minutelyView.height
+                            (Resources.getSystem().displayMetrics.heightPixels
+                                    - itemHeight
+                                    - dpToPx(16 + 8 + 8)
+                                    - currentFeelsLike.height
+                                    - currentTemperature.height
+                                    - bottomCard.height
+                                    - minutelyView.height)
                     }
             }
         }
@@ -175,7 +179,7 @@ class MainActivity : AppCompatActivity() {
 
     var selectedChip = 0
 
-    fun setupRecycler() {
+    private fun setupRecycler() {
         dailyRecycler.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = dailyAdapter
@@ -183,7 +187,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setupBackground() {
+    private fun setupBackground() {
         weatherViewHolder.addView(
             weatherView,
             0,
@@ -199,7 +203,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun setupChips() {
+    private fun setupChips() {
 
         colors = listOf(
             ContextCompat.getColor(this, R.color.chipDefaultDay),
@@ -277,18 +281,32 @@ class MainActivity : AppCompatActivity() {
             when {
                 payloads.isEmpty() -> {
                     val item = dayList[position]
-                    (itemView as DailyForecastView).setupData(
-                        selectedChip,
-                        item.day,
-                        item.hourly,
-                        item.timeZone
-                    )
+                    (itemView as DailyForecastView).apply {
+                        setupData(selectedChip, item.day, item.hourly, item.timeZone)
+                        syncScrollListener = { oldPos, newPos ->
+                            val layoutManager = (dailyRecycler.layoutManager as LinearLayoutManager)
+                            for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
+                                (dailyRecycler[i] as DailyForecastView).syncScroll(oldPos, newPos)
+                            }
+                            //dailyAdapter.notifyItemRangeChanged(0, dayList.size, ScrollSync(position, oldPos, newPos))
+                        }
+                    }
                 }
+                payloads[0] == PAYLOAD_CHIP_CHANGE -> (itemView as DailyForecastView).changeDisplay(
+                    selectedChip
+                )
                 payloads[0] == PAYLOAD_COLOR_CHANGE -> (itemView as DailyForecastView).refreshColors(
                     selectedChip
                 )
-                payloads[0] == PAYLOAD_SCROLL_SYNC -> (itemView as DailyForecastView).syncScroll()
-                else -> (itemView as DailyForecastView).changeDisplay(selectedChip)
+                payloads[0] is ScrollSync -> {
+                    val scrollSync = payloads[0] as ScrollSync
+                    if (scrollSync.originView != position) {
+                        (itemView as DailyForecastView).syncScroll(
+                            scrollSync.oldPos,
+                            scrollSync.newPos
+                        )
+                    }
+                }
             }
         }
         .build()
@@ -325,4 +343,6 @@ class MainActivity : AppCompatActivity() {
         private const val PAYLOAD_CHIP_CHANGE = 98712
     }
 }
+
+private class ScrollSync(val originView: Int, val oldPos: Int, val newPos: Int)
 

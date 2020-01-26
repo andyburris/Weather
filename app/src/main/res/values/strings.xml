@@ -96,6 +96,7 @@
     <string name="settings_misc_about_licenses">Licenses</string>
     <string name="settings_misc_help">Help</string>
     <string name="settings_misc_help_text">
-        • To see alternative graphs (i.e. feels like, rain amount) for each item, long press the selector
+        • To see alternative graphs (i.e. feels like, rain amount) for each item, long press the selector \n
+        • To sync the movement of the graphs, long press and scroll while holding
     </string>
 </resources>

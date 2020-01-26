@@ -5,13 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <HorizontalScrollView
+    <com.andb.apps.weather.ui.daily.ObservableHorizontalScrollView
         android:id="@+id/dailyHorizontalScrollView"
         android:layout_width="0dp"
         android:layout_height="64dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:scrollbars="none"
+        android:focusable="true"
+        android:clickable="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +31,7 @@
                 android:layout_marginEnd="24dp" />
         </FrameLayout>
 
-    </HorizontalScrollView>
+    </com.andb.apps.weather.ui.daily.ObservableHorizontalScrollView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/dailyDetailsRecycler"

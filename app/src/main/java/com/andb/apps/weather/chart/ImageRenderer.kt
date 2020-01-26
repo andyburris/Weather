@@ -5,7 +5,6 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
-import android.util.Log
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.util.dp
 import com.andb.apps.weather.util.dpToPx
@@ -30,7 +29,7 @@ class ImageBarChartRenderer(
         for (i in 0 until dataSet.entryCount) {
             icons.add(i, dataSet.getEntryForIndex(i)?.icon)
         }
-        Log.d("drawDataSet", "icons: $icons")
+        //Log.d("drawDataSet", "icons: $icons")
     }
 
     override fun drawValue(c: Canvas?, valueText: String?, x: Float, y: Float, color: Int) {

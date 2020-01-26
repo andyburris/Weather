@@ -28,6 +28,7 @@
         android:layout_marginStart="16dp"
         android:layout_weight="0"
         android:fontFamily="sans-serif-medium"
+        android:textColor="?android:attr/textColorSecondary"
         android:textSize="18sp"
         tools:text="Location, LC" />
 </LinearLayout>

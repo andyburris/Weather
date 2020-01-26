@@ -3,35 +3,26 @@ package com.andb.apps.weather.ui.daily
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.RotateDrawable
 import android.util.AttributeSet
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andb.apps.weather.R
 import com.andb.apps.weather.chart.ImageBarChartRenderer
-import com.andb.apps.weather.chart.animateChange
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.DailyConditions
 import com.andb.apps.weather.data.model.HourlyConditions
-import com.andb.apps.weather.util.chipTextFrom
 import com.andb.apps.weather.util.colorByNightMode
-import com.andb.apps.weather.util.mapRange
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.formatter.DefaultValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
-import com.github.rongi.klaster.Klaster
 import kotlinx.android.synthetic.main.daily_card.view.*
-import kotlinx.android.synthetic.main.details_item.view.*
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.OffsetDateTime
 import org.threeten.bp.ZoneOffset
-import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.TextStyle
 import java.util.*
 
@@ -39,13 +30,10 @@ import java.util.*
 class DailyForecastView : ConstraintLayout {
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
 
-    lateinit var summary: DailyConditions
+    var syncScrollListener: ((oldPos: Int, newPos: Int) -> Unit)? = null
+
+    private lateinit var summary: DailyConditions
     private var rainPercentVals = listOf<Int>()
     private var rainAmountVals = listOf<Int>()
     private var tempVals = listOf<Int>()
@@ -105,19 +93,19 @@ class DailyForecastView : ConstraintLayout {
 
         dailyDetailsRecycler.apply {
             layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            adapter = detailsAdapter(dailyData)
+            adapter = detailsAdapter(dailyData, context)
         }
     }
 
     fun changeDisplay(chipIndex: Int, animate: Boolean = true) {
+        if (chipIndex == 0) setDetails() else setGraph()
         when (chipIndex) {
-            0 -> setDetails()
-            1 -> setTemperature(animate)
-            2 -> setRainPercent(animate)
-            3 -> setUVIndex(animate)
-            4 -> setWind(animate)
-            5 -> setFeelsLike(animate)
-            6 -> setRainAmount(animate)
+            1 -> dailyChart.setTemperature(tempVals, animate)
+            2 -> dailyChart.setRainPercent(rainPercentVals, animate)
+            3 -> dailyChart.setUVIndex(uvVals, animate)
+            4 -> dailyChart.setWind(windVals, animate)
+            5 -> dailyChart.setFeelsLike(feelsLikeVals, animate)
+            6 -> dailyChart.setRainAmount(rainAmountVals, animate)
         }
     }
 
@@ -128,97 +116,28 @@ class DailyForecastView : ConstraintLayout {
 
     private fun setGraph() {
         dailyHorizontalScrollView.visibility = View.VISIBLE
+        dailyChart.setOnLongClickListener {
+            Log.d("dailyChart", "long click")
+            dailyHorizontalScrollView.onScrollChanged = { x, y, oldX, oldY ->
+                syncScrollListener?.invoke(oldX, x)
+            }
+            dailyHorizontalScrollView.onScrollEnd = {
+                dailyHorizontalScrollView.onScrollChanged = null
+            }
+            true
+        }
         dailyDetailsRecycler.visibility = View.INVISIBLE
     }
 
-    private fun setTemperature(animate: Boolean) {
-        setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter = DegreesValueFormatter()
-        (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
-        dailyChart.animateChange(getList(tempVals), animate = animate) {
-            newMax = (tempVals.maxBy { it } ?: 0) + 5
-            newMin = (tempVals.minBy { it } ?: 0) - 10
-            newColors = listOf(colors[0])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-    private fun setFeelsLike(animate: Boolean) {
-        setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter = DegreesValueFormatter()
-        (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
-        dailyChart.animateChange(getList(feelsLikeVals), animate = animate) {
-            newMax = (feelsLikeVals.maxBy { it } ?: 0) + 5
-            newMin = (feelsLikeVals.minBy { it } ?: 0) - 10
-            newColors = listOf(colors[0])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-
-    private fun setRainPercent(animate: Boolean) {
-        setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter = RainPercentValueFormatter()
-        (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
-        dailyChart.animateChange(getList(rainPercentVals), animate = animate) {
-            newMax = 100 + 8
-            newColors = listOf(colors[1])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-    private fun setRainAmount(animate: Boolean) {
-        setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter =
-            RainAmountValueFormatter()
-        (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
-        dailyChart.animateChange(getList(rainAmountVals), animate = animate) {
-            newMax = (rainAmountVals.maxBy { it } ?: 0) + 1
-            newColors = listOf(colors[1])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-
-    private fun setUVIndex(animate: Boolean) {
-        setGraph()
-        dailyChart.data.getDataSetByIndex(0).valueFormatter = DefaultValueFormatter(0)
-        (dailyChart.renderer as ImageBarChartRenderer).images = listOf()
-        dailyChart.animateChange(getList(uvVals), animate = animate) {
-            newMax = 10
-            newColors = listOf(colors[2])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-    private fun setWind(animate: Boolean) {
-        setGraph()
-        val dataSet = dailyChart.data.getDataSetByIndex(0)
-        dataSet.valueFormatter = MPHValueFormatter()
-        val entries = getListWind(windVals.map { it.first }, windVals.map { it.second })
-        (dailyChart.renderer as ImageBarChartRenderer).images = entries.map { it.icon }
-        dailyChart.animateChange(entries, animate = animate) {
-            newMax = (windVals.maxBy { it.first }?.first ?: 0) + 2
-            newMin = (windVals.minBy { it.first }?.first ?: 0) - 2
-            newColors = listOf(colors[3])
-            newTextColors = listOf(resources.colorByNightMode(Color.BLACK, Color.WHITE))
-        }
-    }
-
-    private var colors =
-        listOf(Prefs.colorTemperature, Prefs.colorRain, Prefs.colorUVIndex, Prefs.colorWind)
-
     fun refreshColors(selected: Int) {
-        colors =
-            listOf(Prefs.colorTemperature, Prefs.colorRain, Prefs.colorUVIndex, Prefs.colorWind)
         changeDisplay(selected)
         if (selected == 0) {
             dailyDetailsRecycler.adapter?.notifyDataSetChanged()
         }
     }
 
-    fun syncScroll() {
-
+    fun syncScroll(oldPos: Int, newPos: Int) {
+        dailyHorizontalScrollView.scrollTo(newPos, 0)
     }
 
     private fun setupChart() {
@@ -266,103 +185,7 @@ class DailyForecastView : ConstraintLayout {
         } //4dp between each bar
     }
 
-    private fun getList(values: Collection<Int>): List<BarEntry> {
-        return values.mapIndexed { index, value -> BarEntry(index.toFloat(), value.toFloat()) }
-    }
 
-    private fun getListWind(mph: List<Int>, directions: List<Int>): List<BarEntry> {
-        val icon = RotateDrawable()
-        icon.drawable = context.getDrawable(R.drawable.ic_arrow_n)?.mutate()
-        return mph.mapIndexed { index, value ->
-            BarEntry(index.toFloat(), value.toFloat(), icon.also {
-                it.fromDegrees = 0f
-                it.toDegrees = 360f
-                it.level = directions[index].mapRange(0..360, 0..10000)
-            })
-        }
-    }
-
-    private fun detailsAdapter(conditions: DailyConditions) = Klaster.get()
-        .itemCount(6)
-        .view(R.layout.details_item, LayoutInflater.from(context))
-        .bind { pos ->
-            val detailsItem: DetailsItem = when (pos) {
-                //TODO: feels like
-                0 -> DetailsItem(
-                    R.string.rain,
-                    String.format(
-                        resources.getString(R.string.percent_placeholder),
-                        (conditions.precipProbability * 100).toInt()
-                    ),
-                    R.drawable.ic_raindrop_black_24dp,
-                    Prefs.colorRain
-                )
-                1 -> DetailsItem(
-                    R.string.uv_index,
-                    String.format(
-                        resources.getString(R.string.max_placeholder),
-                        conditions.uvIndex
-                    ),
-                    R.drawable.ic_uv_index_black_24dp,
-                    Prefs.colorUVIndex
-                )
-                2 -> DetailsItem(
-                    R.string.wind,
-                    String.format(
-                        resources.getString(R.string.max_placeholder_mph),
-                        conditions.windSpeed.toInt()
-                    ),
-                    R.drawable.ic_wind_black_24dp,
-                    Prefs.colorWind
-                )
-                3 -> {
-                    val formatter = DateTimeFormatter.ofPattern("h:mma")
-                    DetailsItem(
-                        R.string.details_sunrise_sunset,
-                        "${formatter.format(conditions.sunriseTime).toLowerCase()} | ${formatter.format(
-                            conditions.sunsetTime
-                        ).toLowerCase()}",
-                        R.drawable.ic_weather_sunset,
-                        Color.parseColor("#C4C4C4")
-                    )
-                }
-                4 -> DetailsItem(
-                    R.string.details_humidity,
-                    String.format(
-                        resources.getString(R.string.percent_placeholder),
-                        (conditions.humidity * 100).toInt()
-                    ),
-                    R.drawable.ic_water_percent,
-                    Color.parseColor("#C4C4C4")
-                )
-                else -> {
-                    val moonPhaseIndex = when (conditions.moonPhase) {
-                        in 0f..0.25f -> 0
-                        in 0.25f..0.5f -> 1
-                        in 0.5f..0.75f -> 2
-                        else -> 3
-                    }
-                    val moonPhase =
-                        resources.getStringArray(R.array.details_moon_states)[moonPhaseIndex]
-                    DetailsItem(
-                        R.string.details_moon,
-                        moonPhase,
-                        R.drawable.ic_weather_night,
-                        Color.parseColor("#C4C4C4")
-                    )
-                }
-            }
-
-            itemView.apply {
-                detailsItemTitle.setText(detailsItem.titleRes)
-                detailsItemDescription.text = detailsItem.details
-                detailsItemIcon.setImageResource(detailsItem.iconRes)
-                detailsItemCircle.color = detailsItem.color
-                detailsItemIcon.setColorFilter(chipTextFrom(detailsItem.color))
-            }
-        }
-        .build()
 }
 
-private class DetailsItem(val titleRes: Int, val details: String, val iconRes: Int, val color: Int)
 

@@ -46,6 +46,7 @@ object SettingsLayout {
             titleRes = R.string.settings_units_header
         }
 
+        //TODO: values same as display?
         chips<String>(KEY_UNIT_TEMP, "unit_temp_imperial") {
             titleRes = R.string.settings_units_temperature
             iconRes = R.drawable.ic_thermostat_black_24dp
@@ -58,8 +59,8 @@ object SettingsLayout {
             titleRes = R.string.settings_units_distance
             iconRes = R.drawable.ic_tape_measure
             val items = context.resources.getStringArray(R.array.settings_units_distance_options)
-            addChip("unit_distance_imperial", items[0], context.getColorCompat(R.color.colorAccent))
-            addChip("unit_distance_metric", items[1], context.getColorCompat(R.color.colorAccent))
+            addChip("in", items[0], context.getColorCompat(R.color.colorAccent))
+            addChip("cm", items[1], context.getColorCompat(R.color.colorAccent))
         }
 
         chips<Boolean>(KEY_UNIT_TIME, false) {
