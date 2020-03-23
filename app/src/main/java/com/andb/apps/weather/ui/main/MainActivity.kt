@@ -283,12 +283,14 @@ class MainActivity : AppCompatActivity() {
                     val item = dayList[position]
                     (itemView as DailyForecastView).apply {
                         setupData(selectedChip, item.day, item.hourly, item.timeZone)
-                        syncScrollListener = { oldPos, newPos ->
+                        syncScrollListener = { _, newPos ->
                             val layoutManager = (dailyRecycler.layoutManager as LinearLayoutManager)
                             for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
-                                (dailyRecycler[i] as DailyForecastView).syncScroll(oldPos, newPos)
+                                (dailyRecycler[i] as DailyForecastView).syncScroll(
+                                    newPos,
+                                    anchorHour()
+                                )
                             }
-                            //dailyAdapter.notifyItemRangeChanged(0, dayList.size, ScrollSync(position, oldPos, newPos))
                         }
                     }
                 }
@@ -298,15 +300,6 @@ class MainActivity : AppCompatActivity() {
                 payloads[0] == PAYLOAD_COLOR_CHANGE -> (itemView as DailyForecastView).refreshColors(
                     selectedChip
                 )
-                payloads[0] is ScrollSync -> {
-                    val scrollSync = payloads[0] as ScrollSync
-                    if (scrollSync.originView != position) {
-                        (itemView as DailyForecastView).syncScroll(
-                            scrollSync.oldPos,
-                            scrollSync.newPos
-                        )
-                    }
-                }
             }
         }
         .build()
@@ -343,6 +336,3 @@ class MainActivity : AppCompatActivity() {
         private const val PAYLOAD_CHIP_CHANGE = 98712
     }
 }
-
-private class ScrollSync(val originView: Int, val oldPos: Int, val newPos: Int)
-

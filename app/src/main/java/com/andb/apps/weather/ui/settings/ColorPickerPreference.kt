@@ -9,7 +9,8 @@ import de.Maxr1998.modernpreferences.PreferencesAdapter
 
 class ColorPickerPreference(key: String) : DialogPreference(key) {
 
-    private val color get() = getInt(Color.BLACK)
+    private val color get() = getInt(defaultColor)
+    var defaultColor = Color.BLACK
 
     var onSelect = {}
 

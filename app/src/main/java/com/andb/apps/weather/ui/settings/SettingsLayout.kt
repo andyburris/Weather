@@ -80,6 +80,7 @@ object SettingsLayout {
             iconRes = R.drawable.ic_weather_sunset
             summary = DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayStart, 0))
             contents {
+                cornerRadius(8f)
                 val picker = HourPicker(context)
                 customView(view = picker, noVerticalPadding = true)
                 picker.is24Hour = Prefs.time24HrFormat
@@ -99,6 +100,7 @@ object SettingsLayout {
             iconRes = R.drawable.ic_weather_sunset
             summary = DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayEnd, 0))
             contents {
+                cornerRadius(8f)
                 val picker = HourPicker(context)
                 customView(view = picker, noVerticalPadding = true)
                 picker.is24Hour = Prefs.time24HrFormat
@@ -160,6 +162,7 @@ object SettingsLayout {
             titleRes = R.string.temperature
             summaryRes = R.string.settings_theme_temp_desc
             iconRes = R.drawable.ic_thermostat_black_24dp
+            defaultColor = Prefs.colorTemperature
             onSelect = {
                 Prefs.colorTemperature = getInt(
                     ContextCompat.getColor(
@@ -173,6 +176,7 @@ object SettingsLayout {
             titleRes = R.string.rain
             summaryRes = R.string.settings_theme_rain_desc
             iconRes = R.drawable.ic_raindrop_black_24dp
+            defaultColor = Prefs.colorRain
             onSelect = {
                 Prefs.colorRain =
                     getInt(context.getColorCompat(R.color.colorRainBackgroundDefault))
@@ -182,6 +186,7 @@ object SettingsLayout {
             titleRes = R.string.uv_index
             summaryRes = R.string.settings_theme_uv_desc
             iconRes = R.drawable.ic_uv_index_black_24dp
+            defaultColor = Prefs.colorUVIndex
             onSelect = {
                 Prefs.colorUVIndex =
                     getInt(context.getColorCompat(R.color.colorUVIndexBackgroundDefault))
@@ -191,6 +196,7 @@ object SettingsLayout {
             titleRes = R.string.wind
             summaryRes = R.string.settings_theme_wind_desc
             iconRes = R.drawable.ic_wind_black_24dp
+            defaultColor = Prefs.colorWind
             onSelect = {
                 Prefs.colorWind =
                     getInt(context.getColorCompat(R.color.colorWindBackgroundDefault))

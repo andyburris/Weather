@@ -14,6 +14,7 @@ import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.DailyConditions
 import com.andb.apps.weather.data.model.HourlyConditions
 import com.andb.apps.weather.util.colorByNightMode
+import com.andb.apps.weather.util.dp
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -41,6 +42,7 @@ class DailyForecastView : ConstraintLayout {
     private var uvVals = listOf<Int>()
     private var windVals = listOf<Pair<Int, Int>>()
     private var labels = listOf<OffsetDateTime>()
+    fun anchorHour() = labels.first().hour
 
     init {
         inflate(context, R.layout.daily_card, this)
@@ -136,8 +138,15 @@ class DailyForecastView : ConstraintLayout {
         }
     }
 
-    fun syncScroll(oldPos: Int, newPos: Int) {
-        dailyHorizontalScrollView.scrollTo(newPos, 0)
+    fun syncScroll(sourcePos: Int, anchorHour: Int) {
+        val offset = anchorHour - this.anchorHour()
+        Log.d(
+            "syncScroll",
+            "sync in child with anchor hour = ${this.anchorHour()}, source anchor hour = $anchorHour"
+        )
+        val adjustedPos = sourcePos + offset * (Prefs.barWidth.dp)
+        Log.d("syncScroll", "offset = $offset, sourcePos = $sourcePos, adjustedPos = $adjustedPos")
+        dailyHorizontalScrollView.scrollTo(adjustedPos.coerceAtLeast(0), 0)
     }
 
     private fun setupChart() {

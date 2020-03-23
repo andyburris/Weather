@@ -6,11 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.andb.apps.weather.R
-import com.andb.apps.weather.data.local.Prefs
+import com.andb.apps.weather.ui.main.weatherView.MaterialWeatherView
+import com.andb.apps.weather.ui.main.weatherView.WeatherView
+import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.test_layout.*
 
 class TestFragment : Fragment() {
 
+    val testWeatherView by lazy { MaterialWeatherView(requireContext()) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -22,6 +25,22 @@ class TestFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        hourPicker.is24Hour = Prefs.time24HrFormat
+        testWeatherHolder.addView(testWeatherView)
+        testWeatherView.apply {
+            setDrawable(true)
+            testWeatherView.setWeather(WeatherView.WEATHER_KIND_CLEAR, true)
+        }
+
+        testTabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                testWeatherView.setWeather((tab?.position ?: 0) + 1, testDaytimeSwitch.isChecked)
+            }
+        })
+
+        testDaytimeSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            testWeatherView.setWeather(testTabLayout.selectedTabPosition + 1, isChecked)
+        }
     }
 }

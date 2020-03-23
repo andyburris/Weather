@@ -9,7 +9,7 @@
     <color name="colorRainTextDefault">#083644</color>
     <color name="colorTemperatureBackgroundDefault">#EF9A9A</color>
     <color name="colorTemperatureTextDefault">#5C0A0A</color>
-    <color name="colorWindBackgroundDefault">#9FFF97</color>
+    <color name="colorWindBackgroundDefault">#81C784</color>
     <color name="colorWindTextDefault">#043300</color>
     <color name="colorUVIndexBackgroundDefault">#FFC700</color>
     <color name="colorUVIndexTextDefault">#3D3000</color>

@@ -76,7 +76,7 @@ public class RainImplementor extends MaterialWeatherView.WeatherAnimationImpleme
             this.canvasSize = (int) Math.pow(viewWidth * viewWidth + viewHeight * viewHeight, 0.5);
 
             this.rectF = new RectF();
-            this.speed = viewWidth / 175f;
+            this.speed = viewWidth / 275f;
             this.color = color;
             this.scale = scale;
 
@@ -280,7 +280,7 @@ public class RainImplementor extends MaterialWeatherView.WeatherAnimationImpleme
                 } else {
                     paint.setAlpha((int) ((1 - scrollRate) * 255));
                 }
-                canvas.drawRect(r.rectF, paint);
+                canvas.drawRoundRect(r.rectF, 8f, 8f, paint);
             }
             if (thunder != null) {
                 canvas.drawColor(
