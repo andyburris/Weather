@@ -16,5 +16,6 @@
     <color name="chipDefaultDay">#89000000</color>
     <color name="chipDefaultNight">#89FFFFFF</color>
     <color name="windowBackgroundLight">#FAFAFA</color>
+    <color name="minutelyGraphBackground">#1A000000</color>
 
 </resources>

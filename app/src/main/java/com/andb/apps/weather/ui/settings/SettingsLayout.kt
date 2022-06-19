@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import com.afollestad.materialdialogs.customview.customView
@@ -12,6 +13,7 @@ import com.afollestad.materialdialogs.list.listItemsSingleChoice
 import com.andb.apps.weather.BuildConfig
 import com.andb.apps.weather.R
 import com.andb.apps.weather.data.local.*
+import com.andb.apps.weather.data.model.UnitType
 import com.andb.apps.weather.util.getColorCompat
 import de.Maxr1998.modernpreferences.helpers.*
 import org.threeten.bp.LocalTime
@@ -20,10 +22,73 @@ import org.threeten.bp.format.DateTimeFormatter
 object SettingsLayout {
     fun create(context: Context) = screen(context) {
         preferenceFileName = KEY_SHAREDPREFS_NAME
-
         titleRes = R.string.settings_title
+
+        subScreen {
+            title = "Test"
+            summary = "DragDropper test"
+            iconRes = R.drawable.ic_drag_indicator_24
+
+            categoryHeader("header_1") {
+                title = "Group 1"
+            }
+
+            reorderableGroup {
+
+                onDropped = { oldPos, newPos ->
+                    Log.d("reorderableGroup", "moved $oldPos to $newPos")
+                }
+
+                reorderable("test_1") {
+                    title = "Test 1"
+                    summary = "Summary 1"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+                reorderable("test_2") {
+                    title = "Test 2"
+                    summary = "Summary 2"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+            }
+
+            categoryHeader("header_2_3") {
+                title = "Groups 2 & 3"
+            }
+
+            reorderableGroup {
+                reorderable("test_3") {
+                    title = "Test 3"
+                    summary = "Summary 3"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+                reorderable("test_4") {
+                    title = "Test 4"
+                    summary = "Summary 4"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+            }
+
+            reorderableGroup {
+                reorderable("test_5") {
+                    title = "Test 5"
+                    summary = "Summary 5"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+                reorderable("test_6") {
+                    title = "Test 6"
+                    summary = "Summary 6"
+                    iconRes = R.drawable.ic_drag_indicator_24
+                }
+            }
+        }
+
         categoryHeader("api_header") {
-            titleRes = R.string.settings_api_header
+            titleRes = R.string.settings_data_header
+        }
+        providers(KEY_PROVIDER) {
+            titleRes = R.string.settings_providers_title
+            summaryRes = R.string.settings_providers_desc
+            iconRes = R.drawable.ic_cloud_download_24
         }
         dialog(KEY_API_KEY) {
             titleRes = R.string.settings_api_key_title
@@ -47,20 +112,12 @@ object SettingsLayout {
         }
 
         //TODO: values same as display?
-        chips<String>(KEY_UNIT_TEMP, "unit_temp_imperial") {
-            titleRes = R.string.settings_units_temperature
-            iconRes = R.drawable.ic_thermostat_black_24dp
-            val items = context.resources.getStringArray(R.array.settings_units_temp_options)
-            addChip("unit_temp_imperial", items[0], context.getColorCompat(R.color.colorAccent))
-            addChip("unit_temp_metric", items[1], context.getColorCompat(R.color.colorAccent))
-        }
-
-        chips<String>(KEY_UNIT_DISTANCE, "unit_distance_imperial") {
-            titleRes = R.string.settings_units_distance
+        chips<String>(KEY_UNITS, UnitType.US.name) {
+            titleRes = R.string.settings_units
             iconRes = R.drawable.ic_tape_measure
-            val items = context.resources.getStringArray(R.array.settings_units_distance_options)
-            addChip("in", items[0], context.getColorCompat(R.color.colorAccent))
-            addChip("cm", items[1], context.getColorCompat(R.color.colorAccent))
+            val items = context.resources.getStringArray(R.array.settings_units_options)
+            addChip(UnitType.US.name, items[0], context.getColorCompat(R.color.colorAccent))
+            addChip(UnitType.SI.name, items[1], context.getColorCompat(R.color.colorAccent))
         }
 
         chips<Boolean>(KEY_UNIT_TIME, false) {
@@ -87,8 +144,9 @@ object SettingsLayout {
                 picker.selectedHour = Prefs.dayStart
                 this.positiveButton {
                     commitInt(picker.selectedHour)
-                    summary =
-                        DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayStart, 0))
+                    val formatter =
+                        DateTimeFormatter.ofPattern(if (Prefs.time24HrFormat) "H" else "ha")
+                    summary = formatter.format(LocalTime.of(Prefs.dayStart, 0))
                     requestRebind()
                     it.dismiss()
                 }
@@ -107,8 +165,9 @@ object SettingsLayout {
                 picker.selectedHour = Prefs.dayEnd
                 this.positiveButton {
                     commitInt(picker.selectedHour)
-                    summary =
-                        DateTimeFormatter.ofPattern("ha").format(LocalTime.of(Prefs.dayEnd, 0))
+                    val formatter =
+                        DateTimeFormatter.ofPattern(if (Prefs.time24HrFormat) "H" else "ha")
+                    summary = formatter.format(LocalTime.of(Prefs.dayEnd, 0))
                     requestRebind()
                     it.dismiss()
                 }

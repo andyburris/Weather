@@ -14,8 +14,10 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/minutelyChartHolder"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
     </FrameLayout>
 
@@ -23,17 +25,17 @@
         android:id="@+id/minutelyChartHolder"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/minutelyBarrier"
         app:layout_constraintTop_toBottomOf="@+id/minutelyTitle">
 
-        <com.github.mikephil.charting.charts.LineChart
+        <com.andb.apps.weather.ui.minutely.LineChartRounded
             android:id="@+id/minutelyChart"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="128dp"
             android:focusable="true" />
     </FrameLayout>
 
@@ -71,27 +73,31 @@
         app:layout_constraintEnd_toStartOf="@+id/minutelyCollpaseIcon"
         app:layout_constraintStart_toEndOf="@+id/minutelyTitleIcon"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Next Hour: Partly Cloudy" />
+        tools:text="Next Hour: Partly Cloudy really long description for the next hour" />
 
     <TextView
         android:id="@+id/minutelyHeavy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/precip_heavy"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimary"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/minutelyMedium"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/minutelyCollapseTarget" />
+        app:layout_constraintTop_toBottomOf="@+id/minutelyCollapseTarget"
+        app:layout_constraintVertical_chainStyle="spread_inside" />
 
     <TextView
         android:id="@+id/minutelyMedium"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/precip_med"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimary"
-        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/minutelyLight"
         app:layout_constraintStart_toStartOf="@+id/minutelyHeavy"
         app:layout_constraintTop_toBottomOf="@+id/minutelyHeavy" />
@@ -100,12 +106,15 @@
         android:id="@+id/minutelyLight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/precip_light"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimary"
-        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/minutelyChartHolder"
         app:layout_constraintStart_toStartOf="@+id/minutelyHeavy"
         app:layout_constraintTop_toBottomOf="@+id/minutelyMedium" />
+
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/minutelyBarrier"

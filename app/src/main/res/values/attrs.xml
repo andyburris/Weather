@@ -3,4 +3,7 @@
     <declare-styleable name="CircleView">
         <attr name="color" format="color" />
     </declare-styleable>
+    <declare-styleable name="MinutelyView">
+        <attr name="collapsed" format="boolean" />
+    </declare-styleable>
 </resources>

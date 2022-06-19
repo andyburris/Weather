@@ -1,7 +1,9 @@
 package com.andb.apps.weather.data.repository
 
-import com.andb.apps.weather.data.model.DarkSkyRequest
+import com.andb.apps.weather.data.model.Conditions
 
-interface DarkSkyRepo {
-    suspend fun getForecast(lat: Double, long: Double, apiKey: String): DarkSkyRequest?
+class DarkSkyRepo : ProviderRepo {
+    override fun fillConditions(conditions: Conditions): Conditions {
+        TODO()
+    }
 }

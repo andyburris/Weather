@@ -10,9 +10,13 @@
     <string name="details_humidity">Humidity</string>
     <string name="details_moon">Moon</string>
     <string-array name="details_moon_states">
+        <item>New Moon</item>
         <item>Waxing Crescent</item>
+        <item>First Quarter</item>
         <item>Waxing Gibbous</item>
+        <item>Full Moon</item>
         <item>Waning Gibbous</item>
+        <item>Third Quarter</item>
         <item>Waning Crescent</item>
     </string-array>
     <string name="next_hour">Next Hour: %1$s</string>
@@ -32,7 +36,7 @@
     <string name="precip_heavy">Heavy</string>
 
     <string name="today">Today</string>
-    <string name="dark_sky_badge">Powered by Dark Sky</string>
+    <string name="provider_placeholder">Powered by %1$s</string>
 
     <!--Location-->
     <string name="location_placeholder">%1$s, %2$s</string>
@@ -40,6 +44,8 @@
     <string name="search">Search</string>
     <string name="none">None</string>
     <string name="no_saved_locations">No saved locations</string>
+    <string name="no_search_results">No search results</string>
+    <string name="pick_location">Pick Location</string>
 
     <!--Network-->
     <string name="offline_error_title">Offline</string>
@@ -48,14 +54,16 @@
 
     <!--Settings-->
     <string name="settings_title">Settings</string>
-    <string name="settings_api_header">API</string>
+    <string name="settings_data_header">Data</string>
+    <string name="settings_providers_title">Providers</string>
+    <string name="settings_providers_desc">Choose main data provider and fallbacks for missing data</string>
     <string name="settings_api_key_title">API Key</string>
     <string name="settings_api_key_desc">API Key from darksky.net/dev</string>
-    <string name="settings_units_header">Units</string>
-    <string name="settings_units_temperature">Temperature</string>
-    <string-array name="settings_units_temp_options">
-        <item>°F</item>
-        <item>°C</item>
+    <string name="settings_units_header">Format</string>
+    <string name="settings_units">Units</string>
+    <string-array name="settings_units_options">
+        <item>US (in/mi/°F)</item>
+        <item>SI (cm/km/°C)</item>
     </string-array>
     <string name="settings_units_distance">Distance</string>
     <string-array name="settings_units_distance_options">
@@ -81,7 +89,6 @@
         <item>Time-Based</item>
     </string-array>
     <string name="settings_theme_temp_desc">Color for temperature graph and chip</string>
-
     <string name="settings_theme_rain_desc">Color for rain graph and chip</string>
     <string name="settings_theme_uv_desc">Color for UV index graph and chip</string>
     <string name="settings_theme_wind_desc">Color for wind graph and chip</string>
@@ -99,4 +106,5 @@
         • To see alternative graphs (i.e. feels like, rain amount) for each item, long press the selector \n
         • To sync the movement of the graphs, long press and scroll while holding
     </string>
+    <string name="provider_picker_title">Choose Provider(s)</string>
 </resources>

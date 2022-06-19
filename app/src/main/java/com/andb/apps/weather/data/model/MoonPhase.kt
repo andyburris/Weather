@@ -1,0 +1,5 @@
+package com.andb.apps.weather.data.model
+
+enum class MoonPhase {
+    NEW_MOON, WAXING_CRESCENT, FIRST_QUARTER, WAXING_GIBBOUS, FULL, WANING_GIBBOUS, THIRD_QUARTER, WANING_CRESCENT
+}

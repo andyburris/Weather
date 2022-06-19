@@ -1,4 +1,4 @@
-package com.andb.apps.weather.views
+package com.andb.apps.weather.ui.minutely
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -9,10 +9,12 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
 import androidx.transition.TransitionManager
 import com.andb.apps.weather.R
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.Minutely
+import com.andb.apps.weather.data.model.UnitType
 import com.andb.apps.weather.util.dp
 import com.andb.apps.weather.util.dpToPx
 import com.andb.apps.weather.util.getColorCompat
@@ -29,26 +31,29 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.MPPointF
 import kotlinx.android.synthetic.main.minutely_layout.view.*
 import kotlinx.android.synthetic.main.rain_marker_view.view.*
-import org.threeten.bp.ZoneOffset
 
-class MinutelyView : ConstraintLayout {
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(
-        context,
-        attrs,
-        defStyleAttr
-    )
+class MinutelyView(context: Context, attrs: AttributeSet? = null) :
+    ConstraintLayout(context, attrs) {
+
+    var onToggle: (heightChange: Int, animate: Boolean) -> Unit = { _, _ -> }
+    var onTouch: (action: Int) -> Unit = {}
+
+    private var mCollapsed: Boolean = true
 
     init {
         inflate(context, R.layout.minutely_layout, this)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.MinutelyView, 0, 0)
+
+        try {
+            val collapsed = a.getBoolean(R.styleable.MinutelyView_collapsed, true)
+            toggle(collapsed)
+        } finally {
+            a.recycle()
+        }
+
         setupChart()
         setupToggle()
     }
-
-    var onToggle: ((collapsing: Boolean, oldHeight: Int, newHeight: Int, animate: Boolean) -> Unit)? =
-        null
-    var onTouch: (action: Int) -> Unit = {}
 
     private fun setupChart() {
 
@@ -62,12 +67,14 @@ class MinutelyView : ConstraintLayout {
                 setDrawGridLines(false)
                 granularity = 60f / 3
                 position = XAxis.XAxisPosition.BOTTOM
-                axisLineWidth = 0f
                 typeface = Typeface.DEFAULT_BOLD
                 textSize = 10f
                 textColor = context.getColorCompat(R.color.colorPrimary)
                 setDrawAxisLine(false)
-                valueFormatter = MinuteValueFormatter(context)
+                valueFormatter =
+                    MinuteValueFormatter(
+                        context
+                    )
                 setAvoidFirstLastClipping(true)
             }
 
@@ -78,25 +85,33 @@ class MinutelyView : ConstraintLayout {
                 axisMinimum = 0f
                 textColor = context.getColorCompat(R.color.colorPrimary)
                 setDrawAxisLine(false)
-                valueFormatter = IntensityValueFormatter(context, axisMinimum, axisMaximum)
+                valueFormatter =
+                    IntensityValueFormatter(
+                        context,
+                        axisMinimum,
+                        axisMaximum
+                    )
+                addLimitLine(LimitLine(axisMinimum).also {
+                    it.lineColor = context.getColorCompat(R.color.colorPrimary)
+                })
                 addLimitLine(LimitLine(axisMaximum / 3).also {
-                    it.enableDashedLine(8.dp.toFloat(), 8.dp.toFloat(), 0f)
-                    it.lineColor =
-                        context.getColorCompat(R.color.colorRainBackgroundDefault)
+                    it.enableDashedLine(2.dp.toFloat(), 4.dp.toFloat(), 0f)
+                    it.lineColor = context.getColorCompat(R.color.colorPrimary)
                 })
                 addLimitLine(LimitLine(axisMaximum / 3 * 2).also {
-                    it.enableDashedLine(8.dp.toFloat(), 8.dp.toFloat(), 0f)
-                    it.lineColor =
-                        context.getColorCompat(R.color.colorRainBackgroundDefault)
+                    it.enableDashedLine(2.dp.toFloat(), 4.dp.toFloat(), 0f)
+                    it.lineColor = context.getColorCompat(R.color.colorPrimary)
                 })
             }
 
-            setViewPortOffsets(0f, viewPortHandler.offsetTop(), 0f, viewPortHandler.offsetBottom())
+            setViewPortOffsets(0f, 0f, 0f, viewPortHandler.offsetBottom())
 
             axisRight.isEnabled = false
             description.isEnabled = false
             legend.isEnabled = false
-            setDrawGridBackground(false)
+            setGridBackgroundColor(context.getColorCompat(R.color.minutelyGraphBackground))
+            updateGridBackgroundRadius(8.dp.toFloat(), 8.dp.toFloat(), 0f, 0f)
+            setDrawGridBackground(true)
             marker = RainMarkerView(context)
 
             //remove highlight if not dragging
@@ -111,14 +126,14 @@ class MinutelyView : ConstraintLayout {
     }
 
     @SuppressLint("SetTextI18n")
-    fun setup(minutely: Minutely, offset: ZoneOffset) {
+    fun setup(minutely: Minutely) {
         val values = minutely.data.mapIndexed { index, minutelyConditions ->
             Entry(index.toFloat(), minutelyConditions.precipIntensity.toFloat())
         }
         populateChart(values)
         minutelyTitle.apply {
             text = minutely.summary
-            val toCollapse = (values.maxBy { it.y }?.y ?: 0f) < 0.05f
+            val toCollapse = (values.maxByOrNull { it.y }?.y ?: 0f) < 0.05f
             toggle(toCollapse, animate = true)
         }
     }
@@ -127,7 +142,6 @@ class MinutelyView : ConstraintLayout {
 
         val lds = LineDataSet(entries, "amounts").also {
             it.setDrawCircles(false)
-            //it.color = ContextCompat.getColor(requireContext(), R.color.colorRainBackgroundDefault)
             it.cubicIntensity = .2f
             it.fillColor = context.getColorCompat(R.color.colorRainBackgroundDefault)
             it.fillAlpha = 255
@@ -144,42 +158,41 @@ class MinutelyView : ConstraintLayout {
         minutelyChart.data = LineData(arrayListOf<ILineDataSet>(lds))
     }
 
-    var mCollapsed: Boolean = true
     private fun setupToggle() {
         minutelyCollapseTarget.setOnClickListener {
             toggle()
         }
     }
 
-    fun toggle(toCollapse: Boolean = !mCollapsed, animate: Boolean = true) {
+    private fun toggle(toCollapse: Boolean = !mCollapsed, animate: Boolean = true) {
         Log.d("setupToggle", "toggled - collapse: $toCollapse")
 
-        minutelyCollpaseIcon.animate().rotation(if (toCollapse) 180f else 0f).setDuration(300)
+        minutelyCollpaseIcon.animate()
+            .rotation(if (toCollapse) 180f else 0f)
+            .setDuration(300)
             .start()
 
-        //val oldHeight = if (toCollapse) expandedHeight() else collapsedHeight()
-        val oldHeight = minutelyHolder.height
+        val oldHeight = if (toCollapse) expandedHeight() else collapsedHeight()
         val newHeight = if (toCollapse) collapsedHeight() else expandedHeight()
         Log.d("setupToggle", "oldHeight: $oldHeight")
-        Log.d("setupToggle", "newHeight: $newHeight")
 
         if (animate) {
             TransitionManager.beginDelayedTransition(minutelyHolder.rootView as ViewGroup)
         }
-        if (toCollapse) {
-            minutelyHolder.layoutParams =
-                minutelyHolder.layoutParams.also { it.height = collapsedHeight() }
-        } else {
-            minutelyHolder.layoutParams =
-                minutelyHolder.layoutParams.also { it.height = ViewGroup.LayoutParams.WRAP_CONTENT }
+
+        minutelyHolder.updateLayoutParams {
+            height = if (toCollapse) collapsedHeight() else ViewGroup.LayoutParams.WRAP_CONTENT
         }
 
-        onToggle?.invoke(toCollapse, oldHeight, newHeight, animate)
+        //val newHeight = minutelyHolder.height
+        Log.d("setupToggle", "newHeight: $newHeight")
+
+        onToggle.invoke(oldHeight - newHeight, animate)
         mCollapsed = toCollapse
     }
 
     private fun collapsedHeight() = minutelyCollapseTarget.height
-    private fun expandedHeight() = collapsedHeight() + dpToPx(120) + dpToPx(16)
+    private fun expandedHeight() = collapsedHeight() + dpToPx(128) + dpToPx(16)
 
 }
 
@@ -221,12 +234,18 @@ private class IntensityValueFormatter(val context: Context, val min: Float, val 
 
 private class RainMarkerView(context: Context) : MarkerView(context, R.layout.rain_marker_view) {
 
-    val valueFormatter = MinuteValueFormatter(context)
+    val valueFormatter =
+        MinuteValueFormatter(context)
 
     @SuppressLint("SetTextI18n")
     override fun refreshContent(e: Entry?, highlight: Highlight?) {
         rainMarkerTime.text = valueFormatter.getAxisLabel(e?.x ?: 0f, null)
-        rainMarkerAmount.text = "${e?.y ?: 0} ${Prefs.rainUnit}"
+        rainMarkerAmount.text = "${e?.y ?: 0} ${
+            when (Prefs.units) {
+                UnitType.US -> "in"
+                UnitType.SI -> "cm"
+            }
+        }"
     }
 
     override fun getOffsetForDrawingAtPoint(posX: Float, posY: Float): MPPointF {

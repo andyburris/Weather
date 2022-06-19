@@ -39,100 +39,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/bottomCard"
-        android:layout_width="match_parent"
+    <com.andb.apps.weather.ui.main.ChipView
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/bottomCard"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:paddingEnd="32dp"
-            android:scrollbars="none"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dailyChart">
-
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:paddingStart="32dp"
-                app:singleLine="true">
-
-                <com.andb.apps.weather.views.ColorableChip
-                    android:id="@+id/dailyChipSummary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/chip_details"
-                    android:textColor="@color/chipDefaultDay"
-                    app:chipIcon="@drawable/ic_list_black_24dp"
-                    app:chipIconSize="12dp"
-                    app:chipIconTint="@color/chipDefaultDay"
-                    app:chipStartPadding="12dp"
-                    app:chipStrokeColor="@color/chipDefaultDay"
-                    app:chipStrokeWidth="1dp" />
-
-                <com.andb.apps.weather.views.ColorableChip
-                    android:id="@+id/dailyChipTemperature"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/temperature"
-                    android:textColor="@color/chipDefaultDay"
-                    app:chipIcon="@drawable/ic_thermostat_black_24dp"
-                    app:chipIconSize="12dp"
-                    app:chipIconTint="@color/chipDefaultDay"
-                    app:chipStartPadding="12dp"
-                    app:chipStrokeColor="@color/colorTemperatureBackgroundDefault"
-                    app:chipStrokeWidth="1dp" />
-
-
-                <com.andb.apps.weather.views.ColorableChip
-                    android:id="@+id/dailyChipRain"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rain"
-                    android:textColor="@color/chipDefaultDay"
-                    app:chipIcon="@drawable/ic_raindrop_black_24dp"
-                    app:chipIconSize="12dp"
-                    app:chipIconTint="@color/chipDefaultDay"
-                    app:chipStartPadding="12dp"
-                    app:chipStrokeColor="@color/colorRainBackgroundDefault"
-                    app:chipStrokeWidth="1dp" />
-
-                <com.andb.apps.weather.views.ColorableChip
-                    android:id="@+id/dailyChipUV"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/uv_index"
-                    android:textColor="@color/chipDefaultDay"
-                    app:chipIcon="@drawable/ic_uv_index_black_24dp"
-                    app:chipIconSize="12dp"
-                    app:chipIconTint="@color/chipDefaultDay"
-                    app:chipStartPadding="12dp"
-                    app:chipStrokeColor="@color/colorUVIndexBackgroundDefault"
-                    app:chipStrokeWidth="1dp" />
-
-                <com.andb.apps.weather.views.ColorableChip
-                    android:id="@+id/dailyChipWind"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/wind"
-                    android:textColor="@color/chipDefaultDay"
-                    app:chipIcon="@drawable/ic_wind_black_24dp"
-                    app:chipIconSize="12dp"
-                    app:chipIconTint="@color/chipDefaultDay"
-                    app:chipStartPadding="12dp"
-                    app:chipStrokeColor="@color/colorWindBackgroundDefault"
-                    app:chipStrokeWidth="1dp" />
-            </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
-    </androidx.cardview.widget.CardView>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="16dp" />
 
     <FrameLayout
         android:id="@+id/fragmentHolder"

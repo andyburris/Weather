@@ -27,7 +27,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
-    <com.andb.apps.weather.views.CircleView
+    <com.andb.apps.weather.ui.settings.CircleView
         android:id="@+id/detailsItemCircle"
         android:layout_width="36dp"
         android:layout_height="36dp"

@@ -6,6 +6,7 @@ import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import com.andb.apps.weather.data.local.Prefs
+import com.andb.apps.weather.ui.daily.BarChartPositiveLabelRenderer
 import com.andb.apps.weather.util.dp
 import com.andb.apps.weather.util.dpToPx
 import com.github.mikephil.charting.animation.ChartAnimator
@@ -19,7 +20,7 @@ class ImageBarChartRenderer(
     animator: ChartAnimator,
     viewPortHandler: ViewPortHandler
 ) :
-    BarChartRoundedRenderer(chart, animator, viewPortHandler) {
+    BarChartPositiveLabelRenderer(chart, animator, viewPortHandler) {
 
     var images: List<Drawable> = listOf()
 

@@ -4,14 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
 import com.andb.apps.weather.R
 import com.andb.apps.weather.ui.main.weatherView.MaterialWeatherView
 import com.andb.apps.weather.ui.main.weatherView.WeatherView
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.test_layout.*
 
-class TestFragment : Fragment() {
+class TestFragment : DialogFragment() {
 
     val testWeatherView by lazy { MaterialWeatherView(requireContext()) }
 

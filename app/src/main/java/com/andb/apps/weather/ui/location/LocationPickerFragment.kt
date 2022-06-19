@@ -1,5 +1,6 @@
 package com.andb.apps.weather.ui.location
 
+import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -8,19 +9,23 @@ import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updateMargins
 import androidx.core.widget.addTextChangedListener
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.transition.ChangeBounds
+import androidx.transition.TransitionManager
 import com.andb.apps.swiper.swipeWith
 import com.andb.apps.weather.R
 import com.andb.apps.weather.data.model.Location
+import com.andb.apps.weather.util.dp
 import com.andb.apps.weather.util.observe
 import com.andb.apps.weather.util.reset
 import com.github.rongi.klaster.Klaster
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import kotlinx.android.synthetic.main.location_item.view.*
-import kotlinx.android.synthetic.main.location_picker_layout.*
+import kotlinx.android.synthetic.main.location_picker.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import org.koin.android.viewmodel.ext.android.viewModel
@@ -28,7 +33,7 @@ import kotlin.math.max
 
 @ExperimentalCoroutinesApi
 @FlowPreview
-class LocationPickerFragment : Fragment() {
+class LocationPickerFragment : PopupWindowFragment() {
 
     private val viewModel: LocationPickerViewModel by viewModel()
 
@@ -42,80 +47,131 @@ class LocationPickerFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.location_picker_layout, container, false)
+        return inflater.inflate(R.layout.location_picker, container)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        locationSelectorCurrent.locationItemText.text =
-            resources.getString(R.string.current_location)
-        locationSavedRecycler.apply {
+        locationPickerRecycler.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = savedAdapter
             swipeWith {
-                right {
-                    endStep {
-                        icon = ContextCompat.getDrawable(context, R.drawable.ic_delete_black_24dp)
-                        color = Color.RED
-                        iconColor = Color.WHITE
-                        action = { viewModel.removeLocation(savedLocations[it]) }
+                leftToRight {
+                    endStep(TYPE_SAVED_LOCATION) {
+                        icon(resources.getDrawable(R.drawable.ic_delete_black_24dp))
+                        color(Color.RED)
+                        iconColor(Color.WHITE)
+                        action { viewModel.removeLocation(savedLocations[it.adapterPosition - 1]) }
                     }
                 }
             }
         }
-        locationSearchRecycler.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = searchAdapter
-        }
-        locationSelectorSearchInputLayout.editText!!.addTextChangedListener(onTextChanged = { text, start, count, after ->
+
+        locationPickerSearch.addTextChangedListener(onTextChanged = { text, start, count, after ->
             viewModel.updateSearch(text.toString())
         })
-        locationSelectorCurrent.setOnClickListener {
-            viewModel.selectSavedLocation("")
-            activity?.supportFragmentManager?.popBackStack()
+
+        locationPickerSearch.setOnFocusChangeListener { v, hasFocus ->
+
+
         }
 
-        viewModel.savedLocations.observe(viewLifecycleOwner) { savedLocations.reset(it); savedAdapter.notifyDataSetChanged() }
-        viewModel.searchedLocations.observe(viewLifecycleOwner) { searchLocations.reset(it); searchAdapter.notifyDataSetChanged() }
+        locationPickerClearIcon.setOnClickListener {
+            locationPickerSearch.text.clear()
+        }
+
+        viewModel.savedLocations.observe(this@LocationPickerFragment) { savedLocations.reset(it); savedAdapter.notifyDataSetChanged() }
+        viewModel.searchedLocations.observe(this@LocationPickerFragment) { searchLocations.reset(it); searchAdapter.notifyDataSetChanged() }
+        viewModel.searchTerm.observe(this@LocationPickerFragment) { term ->
+            TransitionManager.beginDelayedTransition(
+                locationPickerRoot,
+                ChangeBounds().apply { duration = 200 })
+
+            if (term.isEmpty() && locationPickerRecycler.adapter != savedAdapter) {
+                locationPickerRecycler.adapter = savedAdapter
+            } else if (term.isNotEmpty() && locationPickerRecycler.adapter != searchAdapter) {
+                locationPickerRecycler.adapter = searchAdapter
+            }
+
+            locationPickerSearchHolder.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                if (term.isEmpty()) updateMargins(16.dp, 16.dp, 16.dp) else updateMargins(0, 0, 0)
+            }
+
+            //locationPickerClearIcon.isVisible = term.isNotEmpty()
+        }
+
     }
 
-    fun savedAdapter() = Klaster.locationItem(
-        savedLocations,
-        onClick = { viewModel.selectSavedLocation(it.id); activity?.supportFragmentManager?.popBackStack() }) {
-        String.format(
-            resources.getString(R.string.location_placeholder),
-            it.name,
-            it.region
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        popupWindow.update(
+            Resources.getSystem().displayMetrics.widthPixels - 64.dp,
+            ViewGroup.LayoutParams.WRAP_CONTENT
         )
     }
 
-    fun searchAdapter() = Klaster.locationItem(
-        searchLocations,
-        onClick = { viewModel.pickSearchedLocation(it.placeId) }) {
-        val fullText = it.getFullText(null)
-        val primaryText = it.getPrimaryText(null)
-        val boldStart = fullText.indexOf(primaryText.toString())
-        fullText.setSpan(
-            StyleSpan(Typeface.BOLD),
-            boldStart,
-            boldStart + primaryText.length,
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        return@locationItem fullText
-    }
+    private fun savedAdapter() = Klaster.get()
+        .itemCount { savedLocations.size + 1 }
+        .getItemViewType { pos ->
+            if (pos == 0) TYPE_CURRENT_LOCATION else TYPE_SAVED_LOCATION
+        }
+        .view(R.layout.location_item, LayoutInflater.from(context))
+        .bind { position ->
+            when (position) {
+                0 -> itemView.apply {
+                    locationItemIcon.setImageResource(R.drawable.ic_my_location_black_24dp)
+                    locationItemText.setText(R.string.current_location)
+                    setOnClickListener {
+                        viewModel.selectSavedLocation("")
+                        activity?.supportFragmentManager?.popBackStack()
+                    }
+                }
+                else -> itemView.apply {
+                    locationItemIcon.setImageResource(R.drawable.ic_location_black_24dp)
+                    val location = savedLocations[position - 1]
+                    locationItemText.text = location.getText(context)
+                    setOnClickListener {
+                        viewModel.selectSavedLocation(location.id)
+                        activity?.supportFragmentManager?.popBackStack()
+                    }
+                }
+            }
+        }.build()
+
+    private fun searchAdapter() = Klaster.locationItem(
+        list = searchLocations,
+        emptyTextRes = R.string.no_search_results,
+        onClick = {
+            viewModel.pickSearchedLocation(it.placeId)
+            locationPickerSearch.text.clear()
+        },
+        getText = {
+            val fullText = it.getFullText(null)
+            val primaryText = it.getPrimaryText(null)
+            val boldStart = fullText.indexOf(primaryText.toString())
+            fullText.setSpan(
+                StyleSpan(Typeface.BOLD),
+                boldStart,
+                boldStart + primaryText.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            return@locationItem fullText
+        }
+    )
 
     private fun <T> Klaster.locationItem(
         list: MutableList<T>,
+        emptyTextRes: Int,
         onClick: ((T) -> Unit)? = null,
         getText: (T) -> CharSequence
     ) = get()
         .itemCount { max(list.size, 1) }
-        .view(R.layout.location_item, layoutInflater)
+        .view(R.layout.location_item, LayoutInflater.from(context))
         .bind { pos ->
             if (list.isEmpty()) {
                 itemView.apply {
                     locationItemIcon.visibility = View.GONE
-                    locationItemText.text = resources.getString(R.string.no_saved_locations)
+                    locationItemText.text = resources.getString(emptyTextRes)
                 }
             } else {
                 val location = list[pos]
@@ -130,4 +186,10 @@ class LocationPickerFragment : Fragment() {
 
         }
         .build()
+
+    companion object {
+        private const val TYPE_CURRENT_LOCATION = 387412
+        private const val TYPE_SAVED_LOCATION = 342387
+        private const val TYPE_SEARCH_LOCATION = 892344
+    }
 }

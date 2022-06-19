@@ -233,16 +233,16 @@ class MaterialWeatherView : View, WeatherView {
     fun setWeather(weatherIcon: WeatherIcon, daytime: Boolean) {
         Log.d("setWeather", "weatherIcon: $weatherIcon")
         when (weatherIcon) {
-            WeatherIcon.CLEAR_DAY -> setWeather(WeatherView.WEATHER_KIND_CLEAR, true)
-            WeatherIcon.CLEAR_NIGHT -> setWeather(WeatherView.WEATHER_KIND_CLEAR, false)
+            WeatherIcon.CLEAR -> setWeather(WeatherView.WEATHER_KIND_CLEAR, daytime)
             WeatherIcon.RAIN -> setWeather(WeatherView.WEATHER_KIND_RAINY, daytime)
+            WeatherIcon.THUNDERSTORM -> setWeather(WeatherView.WEATHER_KIND_THUNDERSTORM, daytime)
             WeatherIcon.SNOW -> setWeather(WeatherView.WEATHER_KIND_SNOW, daytime)
             WeatherIcon.SLEET -> setWeather(WeatherView.WEATHER_KIND_SLEET, daytime)
+            WeatherIcon.HAIL -> setWeather(WeatherView.WEATHER_KIND_HAIL, daytime)
             WeatherIcon.WIND -> setWeather(WeatherView.WEATHER_KIND_WIND, daytime)
             WeatherIcon.FOG -> setWeather(WeatherView.WEATHER_KIND_FOG, daytime)
             WeatherIcon.CLOUDY -> setWeather(WeatherView.WEATHER_KIND_CLOUDY, daytime)
-            WeatherIcon.PARTLY_CLOUDY_DAY -> setWeather(WeatherView.WEATHER_KIND_CLOUD, true)
-            WeatherIcon.PARTLY_CLOUDY_NIGHT -> setWeather(WeatherView.WEATHER_KIND_CLOUD, false)
+            WeatherIcon.PARTLY_CLOUDY -> setWeather(WeatherView.WEATHER_KIND_CLOUD, daytime)
             WeatherIcon.NONE -> setWeather(WeatherView.WEATHER_KIND_CLEAR, daytime)
         }
     }

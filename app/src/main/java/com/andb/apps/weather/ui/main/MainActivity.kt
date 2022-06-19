@@ -1,21 +1,21 @@
 package com.andb.apps.weather.ui.main
 
-import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Bundle
 import android.transition.TransitionManager
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.get
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.FragmentTransaction
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.assent.Permission
@@ -29,13 +29,13 @@ import com.andb.apps.weather.ui.main.weatherView.MaterialWeatherView
 import com.andb.apps.weather.ui.main.weatherView.WeatherView
 import com.andb.apps.weather.ui.settings.SettingsFragment
 import com.andb.apps.weather.ui.test.TestFragment
-import com.andb.apps.weather.util.*
+import com.andb.apps.weather.util.dpToPx
+import com.andb.apps.weather.util.observe
 import com.github.rongi.klaster.Klaster
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.offline_item.*
 import kotlinx.android.synthetic.main.scroll_layout.*
 import org.koin.android.ext.android.get
-import org.koin.android.viewmodel.ext.android.viewModel
 
 
 class MainActivity : AppCompatActivity() {
@@ -50,23 +50,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
         setupBackground()
         setupChips()
         setupRecycler()
 
-        locationText.setOnClickListener {
-            val ft = supportFragmentManager.beginTransaction()
-            ft.apply {
-                add(R.id.fragmentHolder, locationPickerFragment)
-                addToBackStack("location")
-                setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                commit()
-            }
+        locationText.setOnClickListener { anchorView ->
+            locationPickerFragment.showWithAnchor(supportFragmentManager, "location", locationIcon)
         }
 
         settingsButton.setOnClickListener {
-            Log.d("settingsButton", "clicked")
             val ft = supportFragmentManager.beginTransaction()
             ft.apply {
                 add(R.id.fragmentHolder, settingsFragment)
@@ -77,7 +69,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         testButton.setOnClickListener {
-            Log.d("testButton", "clicked")
             val ft = supportFragmentManager.beginTransaction()
             ft.apply {
                 add(R.id.fragmentHolder, TestFragment())
@@ -109,9 +100,7 @@ class MainActivity : AppCompatActivity() {
             "refreshLayout.isRefreshing = ${refreshLayout.isRefreshing}"
         )
         }
-        viewModel.offline.observe(this) {
-            offlineItem.visibility = if (it) View.VISIBLE else View.GONE
-        }
+        viewModel.offline.observe(this) { offlineItem.isVisible = it }
         viewModel.locationName.observe(this) { locationText.text = it }
         viewModel.currentTemp.observe(this) {
             currentTemperature.text = String.format(
@@ -125,59 +114,46 @@ class MainActivity : AppCompatActivity() {
                 String.format(resources.getString(R.string.feels_like_placeholder), it)
         }
         viewModel.currentBackground.observe(this) { weatherView.setWeather(it.first, it.second) }
-        viewModel.minutely.observe(this) { minutelyView.setup(it.first, it.second) }
+        viewModel.minutely.observe(this) { minutelyView.setup(it) }
         viewModel.dailyForecasts.observe(this) {
             dayList = it
             dailyAdapter.notifyDataSetChanged()
             dailyRecycler.doOnNextLayout {
                 val itemHeight = dailyRecycler.layoutManager?.findViewByPosition(0)?.height ?: 0
                 Log.d("cardOffset", "itemHeight: $itemHeight")
-                currentTemperature.layoutParams =
-                    (currentTemperature.layoutParams as ConstraintLayout.LayoutParams).also {
-                        it.topMargin =
-                            (Resources.getSystem().displayMetrics.heightPixels
-                                    - itemHeight
-                                    - dpToPx(16 + 8 + 8)
-                                    - currentFeelsLike.height
-                                    - currentTemperature.height
-                                    - bottomCard.height
-                                    - minutelyView.height)
-                    }
+                currentTemperature.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    topMargin = (Resources.getSystem().displayMetrics.heightPixels
+                            - itemHeight
+                            - dpToPx(16 + 8 + 8)
+                            - currentFeelsLike.height
+                            - currentTemperature.height
+                            - bottomCard.height
+                            - minutelyView.height)
+                }
             }
+            providerBadge.text = resources.getString(R.string.provider_placeholder)
+                .format(Prefs.providers.first().name)
         }
 
-        minutelyView.onToggle = { collapsing, oldHeight, newHeight, animate ->
-            //val heightOffset = if(collapsed) -357 else 357
-            val heightOffset = oldHeight - newHeight
-            Log.d(
-                "onToggle",
-                "oldHeight: $oldHeight, newHeight: $newHeight, heightOffset: $heightOffset"
-            )
+        minutelyView.onToggle = { heightChange, animate ->
+            Log.d("onToggle", "heightChange: $heightChange")
             if (animate) {
                 TransitionManager.beginDelayedTransition(nestedScrollView)
             }
-            currentTemperature.layoutParams =
-                (currentTemperature.layoutParams as ConstraintLayout.LayoutParams).also {
-                    it.topMargin = it.topMargin + heightOffset
-                }
+            currentTemperature.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                topMargin += heightChange
+            }
         }
         minutelyView.onTouch = { action ->
-            if (action == MotionEvent.ACTION_UP) {
-                //nestedScrollView.startNestedScroll(ViewCompat.SCROLL_AXIS_HORIZONTAL)
-                Log.d("scrollingOnTouch", "true")
-                nestedScrollView.setScrollingEnabled(true)
-            } else {
-                //nestedScrollView.stopNestedScroll()
-                Log.d("scrollingOnTouch", "false")
-                nestedScrollView.setScrollingEnabled(false)
-            }
+            Log.d("minutelyViewOnTouch", "action == $action")
+            nestedScrollView.setScrollingEnabled(action == MotionEvent.ACTION_UP)
         }
 
     }
 
     private val dailyAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder> by lazy { dailyAdapter() }
 
-    var selectedChip = 0
+    private var selectedChip = 0
 
     private fun setupRecycler() {
         dailyRecycler.apply {
@@ -204,64 +180,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupChips() {
-
-        colors = listOf(
-            ContextCompat.getColor(this, R.color.chipDefaultDay),
-            Prefs.colorTemperature,
-            Prefs.colorRain,
-            Prefs.colorUVIndex,
-            Prefs.colorWind
-        )
-            .map { Pair(it, chipTextFrom(it)) }
-
-        chipList.forEachIndexed { index, chip ->
-            chip.chipStrokeColor = ColorStateList.valueOf(colors[index].first)
-            chip.chipBackgroundColor =
-                createChipStateList(colors[index].first)
-        }
-
-        dailyChipSummary.setOnClickListener { selectChip(0) }
-        dailyChipTemperature.setOnClickListener { selectChip(1) }
-        dailyChipTemperature.setOnLongClickListener { selectChip(1, alternativeData = true); true }
-        dailyChipRain.setOnClickListener { selectChip(2) }
-        dailyChipRain.setOnLongClickListener { selectChip(2, alternativeData = true); true }
-        dailyChipUV.setOnClickListener { selectChip(3) }
-        dailyChipWind.setOnClickListener { selectChip(4) }
-
-        selectChip(selectedChip, updateGraphs = false)
-    }
-
-    private val chipList by lazy {
-        listOf(dailyChipSummary, dailyChipTemperature, dailyChipRain, dailyChipUV, dailyChipWind)
-    }
-    private lateinit var colors: List<Pair<Int, Int>>
-    private fun selectChip(
-        index: Int,
-        alternativeData: Boolean = false,
-        updateGraphs: Boolean = true
-    ) {
-        selectedChip = index + if (alternativeData) 4 else 0
-        val chip = chipList[index]
-        chip.apply {
-            isSelected = true
-            setTextColor(colors[index].second)
-            chipIconTint = ColorStateList.valueOf(colors[index].second)
-        }
-        chipList.minus(chip).forEach {
-            it.isSelected = false
-            val textIconColor = colorByNightModeRes(
-                R.color.chipDefaultDay,
-                R.color.chipDefaultNight
-            )
-            it.setTextColor(textIconColor)
-            it.chipIconTint = ColorStateList.valueOf(textIconColor)
-        }
-
-        if (updateGraphs) {
+        bottomCard.onChipSelectedListener = { chip, longClick ->
+            selectedChip = chip + if (longClick) 4 else 0
             dailyAdapter.notifyItemRangeChanged(0, dayList.size, PAYLOAD_CHIP_CHANGE)
         }
     }
-
 
     var dayList = listOf<DayItem>()
     private fun dailyAdapter() = Klaster.get()
@@ -282,7 +205,7 @@ class MainActivity : AppCompatActivity() {
                 payloads.isEmpty() -> {
                     val item = dayList[position]
                     (itemView as DailyForecastView).apply {
-                        setupData(selectedChip, item.day, item.hourly, item.timeZone)
+                        setupData(selectedChip, item.day, item.hourly, getGraphConfig())
                         syncScrollListener = { _, newPos ->
                             val layoutManager = (dailyRecycler.layoutManager as LinearLayoutManager)
                             for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
@@ -303,6 +226,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
         .build()
+
+    private fun getGraphConfig(): GraphConfig {
+        val allHourly = dayList.flatMap { it.hourly }
+        val rainMax = allHourly.maxByOrNull { it.precipIntensity }?.precipIntensity ?: 0.0
+        val tempMin = allHourly.minByOrNull { it.temperature }?.temperature ?: 0.0
+        val tempMax = allHourly.maxByOrNull { it.temperature }?.temperature ?: 100.0
+        val windMax = allHourly.maxByOrNull { it.windSpeed }?.windSpeed ?: 0.0
+        return GraphConfig(rainMax, tempMin, tempMax, windMax)
+    }
 
     override fun onBackPressed() {
         when {
@@ -336,3 +268,10 @@ class MainActivity : AppCompatActivity() {
         private const val PAYLOAD_CHIP_CHANGE = 98712
     }
 }
+
+class GraphConfig(
+    val rainMax: Double,
+    val tempMin: Double,
+    val tempMax: Double,
+    val windMax: Double
+)

@@ -7,7 +7,9 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.graphics.Color
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -24,6 +26,10 @@ fun newIoThread(block: suspend CoroutineScope.() -> Unit): Job {
     return CoroutineScope(Dispatchers.IO).launch(block = block)
 }
 
+fun <T> asyncIO(block: suspend CoroutineScope.() -> T): Deferred<T> {
+    return CoroutineScope(Dispatchers.IO).async(block = block)
+}
+
 suspend fun mainThread(block: suspend CoroutineScope.() -> Unit) {
     withContext(Dispatchers.Main, block)
 }
@@ -33,7 +39,7 @@ suspend fun ioThread(block: suspend CoroutineScope.() -> Unit) {
 }
 
 fun <E, R : Comparable<R>> Collection<E>.mapMax(block: (E) -> R): R? {
-    return this.map(block).maxBy { it }
+    return this.map(block).maxByOrNull { it }
 }
 
 fun Context.getColorCompat(colorRes: Int): Int {
@@ -208,3 +214,36 @@ fun <T> MutableList<T>.reset(with: Collection<T>) {
 }
 
 infix fun <T> T.and(other: T) = listOf(this, other)
+
+fun printViewHierarchy(root: View): String {
+    fun getViewDesc(v: View): String {
+        val res = v.resources
+        val id = v.id
+        return "[${v.javaClass.simpleName}]: " + when (true) {
+            res == null -> "no_resources"
+            id > 0 -> try {
+                res.getResourceName(id)
+            } catch (e: Resources.NotFoundException) {
+                "name_not_found"
+            }
+            else -> "no_id"
+        }
+    }
+
+    val output = StringBuilder(getViewDesc(root))
+    if (root is ViewGroup) {
+        for (v in root.children) {
+            output.append("\n").append(
+                if (v is ViewGroup) {
+                    printViewHierarchy(v).prependIndent("  ")
+                } else {
+                    "  " + getViewDesc(v)
+                }
+            )
+        }
+    } else {
+        output.append(getViewDesc(root))
+    }
+
+    return output.toString()
+}

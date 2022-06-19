@@ -4,13 +4,11 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.Observer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 /**MediatorLiveData of List<T> with better sync to backing list and better modification methods**/
 open class ListLiveData<T>(initialList: List<T> = emptyList()) : MediatorLiveData<List<T>>(),
@@ -163,8 +161,22 @@ fun <T> LiveData<T?>.notNull(): LiveData<T> {
     }
 }
 
-class LoadingLiveData<T>(initalValue: Boolean = false) : MediatorLiveData<T>() {
-    val loading = InitialLiveData(initalValue)
+fun <T> LiveData<T>.debounce(millis: Long): LiveData<T> {
+    return MediatorLiveData<T>().also { mld ->
+        var job: Job? = null
+        mld.addSource(this@debounce) { value ->
+            job?.cancel()
+            job = newIoThread {
+                delay(millis)
+                mld.postValue(value)
+            }
+        }
+
+    }
+}
+
+class LoadingLiveData<T>(initialValue: Boolean = false) : MediatorLiveData<T>() {
+    val loading = InitialLiveData(initialValue)
     override fun <S : Any?> addSource(source: LiveData<S>, onChanged: Observer<in S>) {
         super.addSource(source) {
             Log.d("loadingLiveData", "starting load")

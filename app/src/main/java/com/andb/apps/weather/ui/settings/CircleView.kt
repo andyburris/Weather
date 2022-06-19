@@ -1,4 +1,4 @@
-package com.andb.apps.weather.views
+package com.andb.apps.weather.ui.settings
 
 import android.content.Context
 import android.graphics.Canvas

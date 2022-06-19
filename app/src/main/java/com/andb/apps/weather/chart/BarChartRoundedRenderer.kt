@@ -47,9 +47,9 @@ open class BarChartRoundedRenderer(
             val count = min(ceil((dataSet.entryCount.toFloat() * phaseX).toDouble().toInt().toDouble()), dataSet.entryCount.toDouble())
             while (i < count) {
 
-                val e = dataSet.getEntryForIndex(i)
+                val entry = dataSet.getEntryForIndex(i)
 
-                x = e.x
+                x = entry.x
 
                 mBarShadowRectBuffer.left = x - barWidthHalf
                 mBarShadowRectBuffer.right = x + barWidthHalf
@@ -130,11 +130,18 @@ open class BarChartRoundedRenderer(
                     Shader.TileMode.MIRROR
                 )
             }
+            val isNegative = dataSet.getEntryForIndex(j / 4).y < 0
             val path2 = roundRect(
                 RectF(
                     buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
                     buffer.buffer[j + 3]
-                ), radius.toFloat(), radius.toFloat(), true, true, false, false
+                ),
+                radius.toFloat(),
+                radius.toFloat(),
+                tl = !isNegative,
+                tr = !isNegative,
+                br = isNegative,
+                bl = isNegative
             )
             c.drawPath(path2, mRenderPaint)
             if (drawBorder) {

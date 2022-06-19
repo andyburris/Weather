@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import com.andb.apps.weather.R
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.DailyConditions
+import com.andb.apps.weather.data.model.MoonPhase
 import com.andb.apps.weather.util.chipTextFrom
 import com.github.rongi.klaster.Klaster
 import kotlinx.android.synthetic.main.details_item.view.*
@@ -66,10 +67,14 @@ fun detailsAdapter(conditions: DailyConditions, context: Context) = Klaster.get(
             )
             else -> {
                 val moonPhaseIndex = when (conditions.moonPhase) {
-                    in 0f..0.25f -> 0
-                    in 0.25f..0.5f -> 1
-                    in 0.5f..0.75f -> 2
-                    else -> 3
+                    MoonPhase.NEW_MOON -> 0
+                    MoonPhase.WAXING_CRESCENT -> 1
+                    MoonPhase.FIRST_QUARTER -> 2
+                    MoonPhase.WAXING_GIBBOUS -> 3
+                    MoonPhase.FULL -> 4
+                    MoonPhase.WANING_GIBBOUS -> 5
+                    MoonPhase.THIRD_QUARTER -> 6
+                    MoonPhase.WANING_CRESCENT -> 7
                 }
                 val moonPhase =
                     context.resources.getStringArray(R.array.details_moon_states)[moonPhaseIndex]

@@ -7,12 +7,14 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.andb.apps.weather.R
 import com.andb.apps.weather.chart.ImageBarChartRenderer
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.model.DailyConditions
 import com.andb.apps.weather.data.model.HourlyConditions
+import com.andb.apps.weather.ui.main.GraphConfig
 import com.andb.apps.weather.util.colorByNightMode
 import com.andb.apps.weather.util.dp
 import com.github.mikephil.charting.components.XAxis
@@ -22,8 +24,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import kotlinx.android.synthetic.main.daily_card.view.*
 import org.threeten.bp.LocalDateTime
-import org.threeten.bp.OffsetDateTime
-import org.threeten.bp.ZoneOffset
+import org.threeten.bp.ZonedDateTime
 import org.threeten.bp.format.TextStyle
 import java.util.*
 
@@ -33,6 +34,7 @@ class DailyForecastView : ConstraintLayout {
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
     var syncScrollListener: ((oldPos: Int, newPos: Int) -> Unit)? = null
+    fun anchorHour() = labels.first().hour
 
     private lateinit var summary: DailyConditions
     private var rainPercentVals = listOf<Int>()
@@ -41,8 +43,9 @@ class DailyForecastView : ConstraintLayout {
     private var feelsLikeVals = listOf<Int>()
     private var uvVals = listOf<Int>()
     private var windVals = listOf<Pair<Int, Int>>()
-    private var labels = listOf<OffsetDateTime>()
-    fun anchorHour() = labels.first().hour
+    private var labels = listOf<ZonedDateTime>()
+
+    private lateinit var graphConfig: GraphConfig
 
     init {
         inflate(context, R.layout.daily_card, this)
@@ -52,7 +55,7 @@ class DailyForecastView : ConstraintLayout {
         chipIndex: Int,
         dailyData: DailyConditions,
         hourlyData: List<HourlyConditions>,
-        timeZone: ZoneOffset
+        graphConfig: GraphConfig
     ) {
         summary = dailyData
         rainPercentVals =
@@ -62,8 +65,9 @@ class DailyForecastView : ConstraintLayout {
         tempVals = hourlyData.map { it.temperature.toInt() }
         feelsLikeVals = hourlyData.map { it.apparentTemperature.toInt() }
         uvVals = hourlyData.map { it.uvIndex }
-        windVals = hourlyData.map { Pair(it.windSpeed.toInt(), it.windBearing) }
-        labels = hourlyData.map { it.time.atOffset(timeZone) }
+        windVals = hourlyData.map { Pair(it.windSpeed.toInt(), it.windDirection) }
+        labels = hourlyData.map { it.time }
+        this.graphConfig = graphConfig
 
         setupChart()
 
@@ -76,16 +80,16 @@ class DailyForecastView : ConstraintLayout {
         Log.d("setupData", "labels = $labels")
 
 
-        val dayOfWeek = dailyData.time.atOffset(timeZone)
-            .dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
+        val dayOfWeek = dailyData.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
         dailyName.text =
-            if (dailyData.time.dayOfMonth == LocalDateTime.now().dayOfMonth) resources.getString(R.string.today) else dayOfWeek
+            if (dailyData.date.dayOfMonth == LocalDateTime.now().dayOfMonth) resources.getString(R.string.today) else dayOfWeek
         dailyHighLow.text = String.format(
             resources.getString(R.string.high_low_placeholder),
             dailyData.temperatureLow.toInt(),
             dailyData.temperatureHigh.toInt()
         )
         dailyDescription.text = dailyData.summary
+        dailyDescription.isVisible = dailyData.summary.isNotEmpty()
 
         dailyChart.data = initialData(hourlyData.size)
         dailyChart.data.getDataSetByIndex(0).apply {
@@ -102,12 +106,21 @@ class DailyForecastView : ConstraintLayout {
     fun changeDisplay(chipIndex: Int, animate: Boolean = true) {
         if (chipIndex == 0) setDetails() else setGraph()
         when (chipIndex) {
-            1 -> dailyChart.setTemperature(tempVals, animate)
+            1 -> dailyChart.setTemperature(
+                tempVals,
+                animate,
+                graphConfig.tempMin.toInt(),
+                graphConfig.tempMax.toInt()
+            )
             2 -> dailyChart.setRainPercent(rainPercentVals, animate)
             3 -> dailyChart.setUVIndex(uvVals, animate)
-            4 -> dailyChart.setWind(windVals, animate)
+            4 -> dailyChart.setWind(windVals, animate, graphConfig.windMax.toInt())
             5 -> dailyChart.setFeelsLike(feelsLikeVals, animate)
-            6 -> dailyChart.setRainAmount(rainAmountVals, animate)
+            6 -> dailyChart.setRainAmount(
+                rainAmountVals,
+                animate,
+                (graphConfig.rainMax * 100).toInt()
+            )
         }
     }
 
@@ -140,12 +153,7 @@ class DailyForecastView : ConstraintLayout {
 
     fun syncScroll(sourcePos: Int, anchorHour: Int) {
         val offset = anchorHour - this.anchorHour()
-        Log.d(
-            "syncScroll",
-            "sync in child with anchor hour = ${this.anchorHour()}, source anchor hour = $anchorHour"
-        )
         val adjustedPos = sourcePos + offset * (Prefs.barWidth.dp)
-        Log.d("syncScroll", "offset = $offset, sourcePos = $sourcePos, adjustedPos = $adjustedPos")
         dailyHorizontalScrollView.scrollTo(adjustedPos.coerceAtLeast(0), 0)
     }
 

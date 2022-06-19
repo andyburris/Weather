@@ -28,7 +28,7 @@ class DataSetChanger(
         (chart.data.getDataSetByIndex(0) as BarDataSet).valueColors
     var newColors = oldColors
     var newTextColors = oldTextColors
-    var newMax: Int = newData.maxBy { it.y }?.y?.toInt() ?: 100
+    var newMax: Int = newData.maxByOrNull { it.y }?.y?.toInt() ?: 100
     var newMin: Int = 0
     private var startTime: Long = 0
     var fps = 60

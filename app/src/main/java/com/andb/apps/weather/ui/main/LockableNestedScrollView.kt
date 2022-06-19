@@ -1,7 +1,8 @@
-package com.andb.apps.weather.views
+package com.andb.apps.weather.ui.main
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import androidx.annotation.Nullable
 import androidx.core.widget.NestedScrollView
@@ -28,6 +29,7 @@ class LockableNestedScrollView : NestedScrollView {
     }
 
     fun setScrollingEnabled(enabled: Boolean) {
+        Log.d("lockableNestedSV", "scrolling enabled = $enabled")
         scrollable = enabled
     }
 }

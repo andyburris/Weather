@@ -1,4 +1,4 @@
-package com.andb.apps.weather.views
+package com.andb.apps.weather.ui.main
 
 import android.content.Context
 import android.util.AttributeSet

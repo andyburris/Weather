@@ -1,6 +1,6 @@
 package com.andb.apps.weather.data.remote
 
-import com.andb.apps.weather.data.model.DarkSkyRequest
+import com.andb.apps.weather.data.model.darksky.DarkSkyRequest
 import retrofit2.http.GET
 import retrofit2.http.Path
 

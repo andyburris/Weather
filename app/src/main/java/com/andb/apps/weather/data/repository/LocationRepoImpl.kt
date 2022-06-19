@@ -1,5 +1,6 @@
 package com.andb.apps.weather.data.repository
 
+import android.annotation.SuppressLint
 import android.location.Geocoder
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -29,6 +30,7 @@ class LocationRepoImpl(
         return locationsDao.getLocations()
     }
 
+    @SuppressLint("MissingPermission")
     override fun getSelectedLocation(): LiveData<Location?> {
         return selectedID.mapAsync { selectedID ->
             return@mapAsync when (selectedID) {
