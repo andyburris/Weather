@@ -3,10 +3,7 @@ package com.andb.apps.weather.data.model
 import com.andb.apps.weather.util.secondsToLocalDateTime
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneOffset
-import org.threeten.bp.ZonedDateTime
+import java.time.*
 
 data class Conditions(
     val current: CurrentConditions,
@@ -17,7 +14,7 @@ data class Conditions(
 data class DailyConditions(
     val date: LocalDate,
     val summary: String,
-    val icon: WeatherIcon,
+    val icon: ConditionCode,
     val sunriseTime: ZonedDateTime,
     val sunsetTime: ZonedDateTime,
     val moonPhase: MoonPhase,
@@ -41,7 +38,7 @@ data class DailyConditions(
 data class HourlyConditions(
     val time: ZonedDateTime,
     val summary: String,
-    val icon: WeatherIcon,
+    val icon: ConditionCode,
     val precipIntensity: Double,
     val precipProbability: Double,
     val precipType: PrecipitationType,
@@ -68,7 +65,7 @@ data class MinutelyConditions(
 data class CurrentConditions(
     val time: ZonedDateTime,
     val summary: String,
-    val icon: WeatherIcon,
+    val icon: ConditionCode,
     val precipIntensity: Double,
     val temperature: Double,
     val apparentTemperature: Double,
@@ -87,6 +84,7 @@ data class CurrentConditions(
 class LocalDateTimeAdapter {
     @ToJson
     fun toJson(dt: LocalDateTime): String? {
+        return dt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli().toString()
         return dt.toEpochSecond(ZoneOffset.UTC).toString()
     }
 

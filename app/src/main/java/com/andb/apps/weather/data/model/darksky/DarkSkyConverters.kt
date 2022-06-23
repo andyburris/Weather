@@ -1,7 +1,7 @@
 package com.andb.apps.weather.data.model.darksky
 
 import com.andb.apps.weather.data.model.*
-import org.threeten.bp.ZoneOffset
+import java.time.ZoneOffset
 
 fun DarkSkyRequest.toConditions(): Conditions {
     return Conditions(
@@ -99,20 +99,20 @@ fun DarkSkyDailyConditions.toDailyConditions(timeZone: ZoneOffset): DailyConditi
     )
 }
 
-private fun String.toWeatherIcon(): WeatherIcon {
+private fun String.toWeatherIcon(): ConditionCode {
     return when (this) {
-        "clear-day" -> WeatherIcon.CLEAR
-        "clear-night" -> WeatherIcon.CLEAR
-        "rain" -> WeatherIcon.RAIN
-        "snow" -> WeatherIcon.SNOW
-        "sleet" -> WeatherIcon.SLEET
-        "wind" -> WeatherIcon.WIND
-        "fog" -> WeatherIcon.FOG
-        "cloudy" -> WeatherIcon.CLOUDY
-        "partly-cloudy-day" -> WeatherIcon.PARTLY_CLOUDY
-        "partly-cloudy-night" -> WeatherIcon.PARTLY_CLOUDY
-        "none" -> WeatherIcon.NONE
-        else -> WeatherIcon.NONE
+        "clear-day" -> ConditionCode.CLEAR
+        "clear-night" -> ConditionCode.CLEAR
+        "rain" -> ConditionCode.RAIN
+        "snow" -> ConditionCode.SNOW
+        "sleet" -> ConditionCode.SLEET
+        "wind" -> ConditionCode.WIND
+        "fog" -> ConditionCode.FOG
+        "cloudy" -> ConditionCode.CLOUDY
+        "partly-cloudy-day" -> ConditionCode.PARTLY_CLOUDY
+        "partly-cloudy-night" -> ConditionCode.PARTLY_CLOUDY
+        "none" -> ConditionCode.NONE
+        else -> ConditionCode.NONE
     }
 }
 

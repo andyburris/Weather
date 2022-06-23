@@ -12,9 +12,9 @@ import com.andb.apps.weather.data.model.darksky.toConditions
 import com.andb.apps.weather.data.remote.ClimacellService
 import com.andb.apps.weather.data.remote.DarkSkyService
 import com.squareup.moshi.Moshi
-import org.threeten.bp.ZonedDateTime
-import org.threeten.bp.format.DateTimeFormatter
 import retrofit2.Retrofit
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class WeatherRepoImpl(
     private val moshi: Moshi,

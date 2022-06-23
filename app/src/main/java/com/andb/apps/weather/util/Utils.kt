@@ -16,9 +16,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
-import org.threeten.bp.Instant
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlin.math.roundToInt
 
 
@@ -101,23 +101,6 @@ fun transposeRange(
     val newRange = newMax - newMin
     return (oldValue - oldMin) * newRange / oldRange + newMin
 }
-
-fun dpToPx(dp: Int): Int {
-    val scale = Resources.getSystem().displayMetrics.density
-    return (dp * scale).toInt()
-}
-
-fun spToPx(sp: Int): Float {
-    val scale = Resources.getSystem().displayMetrics.density
-    val size = Resources.getSystem().configuration.fontScale
-    return sp * scale * size
-}
-
-val Int.dp
-    get() = dpToPx(this)
-
-val Int.sp
-    get() = spToPx(this)
 
 fun statusBarHeight(resources: Resources): Int {
     val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")

@@ -8,7 +8,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 
 /**MediatorLiveData of List<T> with better sync to backing list and better modification methods**/
 open class ListLiveData<T>(initialList: List<T> = emptyList()) : MediatorLiveData<List<T>>(),
@@ -120,9 +119,9 @@ class InitialLiveData<T>(private val initialValue: T) : MediatorLiveData<T>() {
 fun <T> LiveData<T>.asFlow() = channelFlow<T> {
     val initial = this@asFlow.value
     if (initial != null) {
-        offer(initial)
+        trySend(initial).isSuccess
     }
-    val observer = Observer<T> { t -> offer(t) }
+    val observer = Observer<T> { t -> trySend(t).isSuccess }
     observeForever(observer)
     awaitClose {
         removeObserver(observer)

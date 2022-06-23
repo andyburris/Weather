@@ -3,9 +3,9 @@ package com.andb.apps.weather.data.model.darksky
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.ToJson
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneId
-import org.threeten.bp.ZoneOffset
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 data class DarkSkyRequest(
     @field:Json(name = "latitude") val latitude: Float,

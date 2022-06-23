@@ -16,27 +16,18 @@ import com.andb.apps.weather.data.repository.LocationRepo
 import com.andb.apps.weather.data.repository.LocationRepoImpl
 import com.andb.apps.weather.data.repository.WeatherRepo
 import com.andb.apps.weather.data.repository.WeatherRepoImpl
-import com.andb.apps.weather.ui.location.LocationPickerFragment
-import com.andb.apps.weather.ui.location.LocationPickerViewModel
-import com.andb.apps.weather.ui.main.WeatherViewModel
-import com.andb.apps.weather.ui.settings.SettingsFragment
-import com.andb.apps.weather.ui.settings.SettingsLayout
-import com.andb.apps.weather.ui.settings.SettingsViewModel
 import com.chibatching.kotpref.Kotpref
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.jakewharton.threetenabp.AndroidThreeTen
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import de.Maxr1998.modernpreferences.PreferencesAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -106,13 +97,6 @@ class App : Application() {
             )
         }
         single<LocationRepo> { LocationRepoImpl(get(), get(), get(), get()) }
-
-        viewModel { WeatherViewModel(get(), get()) }
-        viewModel { LocationPickerViewModel(get()) }
-        viewModel { SettingsViewModel(PreferencesAdapter(SettingsLayout.create(androidContext()))) }
-
-        single { SettingsFragment() }
-        single { LocationPickerFragment() }
     }
 
     override fun onCreate() {
@@ -123,7 +107,6 @@ class App : Application() {
             androidContext(this@App)
             modules(koinModule)
         }
-        AndroidThreeTen.init(this)
         Kotpref.init(this)
         AppCompatDelegate.setDefaultNightMode(Prefs.nightMode)
     }

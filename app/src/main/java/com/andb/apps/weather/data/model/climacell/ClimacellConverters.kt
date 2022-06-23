@@ -141,32 +141,32 @@ public class MinutelySummaryPoint(val minute: Int, val precipIntensity: Double) 
     }
 }
 
-private fun String.toWeatherIcon(): WeatherIcon {
+private fun String.toWeatherIcon(): ConditionCode {
     return when (this) {
-        "freezing_rain_heavy" -> WeatherIcon.SLEET
-        "freezing_rain" -> WeatherIcon.SLEET
-        "freezing_rain_light" -> WeatherIcon.SLEET
-        "freezing_drizzle" -> WeatherIcon.SLEET
-        "ice_pellets_heavy" -> WeatherIcon.HAIL
-        "ice_pellets" -> WeatherIcon.HAIL
-        "ice_pellets_light" -> WeatherIcon.HAIL
-        "snow_heavy" -> WeatherIcon.SNOW
-        "snow" -> WeatherIcon.SNOW
-        "snow_light" -> WeatherIcon.SNOW
-        "flurries" -> WeatherIcon.SNOW
-        "tstorm" -> WeatherIcon.THUNDERSTORM
-        "rain_heavy" -> WeatherIcon.RAIN
-        "rain" -> WeatherIcon.RAIN
-        "rain_light" -> WeatherIcon.RAIN
-        "drizzle" -> WeatherIcon.RAIN
-        "fog_light" -> WeatherIcon.FOG
-        "fog" -> WeatherIcon.FOG
-        "cloudy" -> WeatherIcon.CLOUDY
-        "mostly_cloudy" -> WeatherIcon.CLOUDY
-        "partly_cloudy" -> WeatherIcon.PARTLY_CLOUDY
-        "mostly_clear" -> WeatherIcon.CLEAR
-        "clear" -> WeatherIcon.CLEAR
-        else -> WeatherIcon.NONE
+        "freezing_rain_heavy" -> ConditionCode.SLEET
+        "freezing_rain" -> ConditionCode.SLEET
+        "freezing_rain_light" -> ConditionCode.SLEET
+        "freezing_drizzle" -> ConditionCode.SLEET
+        "ice_pellets_heavy" -> ConditionCode.HAIL
+        "ice_pellets" -> ConditionCode.HAIL
+        "ice_pellets_light" -> ConditionCode.HAIL
+        "snow_heavy" -> ConditionCode.SNOW
+        "snow" -> ConditionCode.SNOW
+        "snow_light" -> ConditionCode.SNOW
+        "flurries" -> ConditionCode.SNOW
+        "tstorm" -> ConditionCode.THUNDERSTORM
+        "rain_heavy" -> ConditionCode.RAIN
+        "rain" -> ConditionCode.RAIN
+        "rain_light" -> ConditionCode.RAIN
+        "drizzle" -> ConditionCode.RAIN
+        "fog_light" -> ConditionCode.FOG
+        "fog" -> ConditionCode.FOG
+        "cloudy" -> ConditionCode.CLOUDY
+        "mostly_cloudy" -> ConditionCode.CLOUDY
+        "partly_cloudy" -> ConditionCode.PARTLY_CLOUDY
+        "mostly_clear" -> ConditionCode.CLEAR
+        "clear" -> ConditionCode.CLEAR
+        else -> ConditionCode.NONE
     }
 }
 

@@ -3,9 +3,9 @@ package com.andb.apps.weather.data.model.climacell
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 import com.squareup.moshi.ToJson
-import org.threeten.bp.LocalDate
-import org.threeten.bp.ZoneId
-import org.threeten.bp.ZonedDateTime
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 data class ClimacellRequest(
     val current: ClimacellConditions,
