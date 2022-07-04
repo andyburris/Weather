@@ -2,11 +2,7 @@ package com.andb.apps.weather.data.local
 
 import androidx.appcompat.app.AppCompatDelegate
 import com.andb.apps.weather.BuildConfig
-import com.andb.apps.weather.R
-import com.andb.apps.weather.data.model.Provider
 import com.andb.apps.weather.data.model.UnitType
-import com.andb.apps.weather.util.getColorCompat
-import com.andb.apps.weather.util.listPref
 import com.chibatching.kotpref.KotprefModel
 import com.chibatching.kotpref.enumpref.enumValuePref
 import com.squareup.moshi.Moshi
@@ -40,21 +36,6 @@ object Prefs : KotprefModel(), KoinComponent {
     override val kotprefName: String
         get() = KEY_SHAREDPREFS_NAME
 
-    const val DEBUG_OFFLINE: Boolean = true
-    const val MULTIPLE_PROVIDERS: Boolean = false
-    var barWidth = 40
-
-    var providers by listPref<Provider>(
-        key = KEY_PROVIDER,
-        default = listOf(
-            Provider(PROVIDER_CLIMACELL, "Climacell", true, 4),
-            Provider(PROVIDER_DARK_SKY, "Dark Sky", true, 7),
-            Provider(PROVIDER_ACCUWEATHER, "AccuWeather", false, 5),
-            Provider(PROVIDER_NWS, "National Weather Service", false, 5)
-        ),
-        adapter = moshi.adapter(Provider::class.java),
-        commitByDefault = true
-    )
     var apiKey by stringPref("", KEY_API_KEY)
 
     var selectedID by stringPref("", KEY_SELECTED_ID)
@@ -63,23 +44,6 @@ object Prefs : KotprefModel(), KoinComponent {
 
     var dayStart by intPref(7, KEY_DAY_START)
     var dayEnd by intPref(23, KEY_DAY_END)
-
-    var colorTemperature by intPref(
-        context.getColorCompat(R.color.colorTemperatureBackgroundDefault),
-        KEY_COLOR_TEMP
-    )
-    var colorRain by intPref(
-        context.getColorCompat(R.color.colorRainBackgroundDefault),
-        KEY_COLOR_RAIN
-    )
-    var colorUVIndex by intPref(
-        context.getColorCompat(R.color.colorUVIndexBackgroundDefault),
-        KEY_COLOR_UV
-    )
-    var colorWind by intPref(
-        context.getColorCompat(R.color.colorWindBackgroundDefault),
-        KEY_COLOR_WIND
-    )
 
     var units by enumValuePref(UnitType.US, KEY_UNITS)
     var time24HrFormat by booleanPref(false, KEY_UNIT_TIME)

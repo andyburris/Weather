@@ -1,20 +1,20 @@
 package com.andb.apps.weather.data.local
 
 import androidx.room.*
-import com.andb.apps.weather.data.model.Location
+import com.andb.apps.weather.data.model.SavedLocation
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LocationDao {
     @Insert
-    fun saveLocation(location: Location)
+    fun saveLocation(location: SavedLocation)
 
     @Update
-    fun updateLocation(location: Location)
+    fun updateLocation(location: SavedLocation)
 
     @Delete
-    fun removeLocation(location: Location)
+    fun removeLocation(location: SavedLocation)
 
-    @Query("SELECT * FROM Location")
-    fun getLocations(): Flow<List<Location>>
+    @Query("SELECT * FROM SavedLocation")
+    fun getLocations(): Flow<List<SavedLocation>>
 }

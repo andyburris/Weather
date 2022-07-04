@@ -14,6 +14,7 @@ import com.andb.apps.weather.ui.theme.WeatherColors
 @Composable
 fun WeatherBackground(
     conditionCode: ConditionCode,
+    daytime: Boolean,
     modifier: Modifier = Modifier,
     onRotationChange: (rotation2D: Float, rotation3D: Float) -> Unit = { _, _ -> }
 ) {
@@ -35,12 +36,22 @@ fun WeatherBackground(
                 Precipitation(config = SleetConfig.rain, rotationState = rotation)
                 Precipitation(config = SleetConfig.snow, rotationState = rotation)
             }
-            ConditionCode.SNOW -> Precipitation(config = snowConfig, rotationState = rotation)
+            ConditionCode.SNOW -> {
+                Precipitation(
+                    config = snowConfig.copy(baseAngleOffsetDeg = 20f),
+                    rotationState = rotation
+                )
+                Precipitation(config = snowConfig, rotationState = rotation)
+                Precipitation(
+                    config = snowConfig.copy(baseAngleOffsetDeg = -20f),
+                    rotationState = rotation
+                )
+            }
             ConditionCode.THUNDERSTORM -> {
                 Clouds(rotationState = rotation, modifier = Modifier.fillMaxSize())
                 Precipitation(config = rainConfig, rotationState = rotation)
             }
-            ConditionCode.WIND -> Box {}
+            ConditionCode.WIND -> Wind(rotationState = rotation)
         }
     }
 }
@@ -66,8 +77,9 @@ private val rainConfig = PrecipiationConfig(
 private val snowConfig = PrecipiationConfig(
     colors = WeatherColors.Overlay.Snow.values().map { it.color },
     lengths = (8..8).toList(),
-    speeds = listOf(3450, 3500, 3550),
+    speeds = listOf(3000, 3500, 3750),
     dampenRotation = 0.25f,
+    amountOfDroplets = 50,
 )
 
 private val hailConfig = PrecipiationConfig(
