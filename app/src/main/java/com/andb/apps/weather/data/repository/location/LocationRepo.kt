@@ -1,23 +1,17 @@
 package com.andb.apps.weather.data.repository.location
 
+import com.andb.apps.weather.LocationState
 import com.andb.apps.weather.data.model.FixedLocation
-import com.andb.apps.weather.data.model.SavedLocation
-import com.andb.apps.weather.data.model.SelectedLocation
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import kotlinx.coroutines.flow.Flow
 
 interface LocationRepo {
-    suspend fun getCurrentLocation(): Flow<Result<FixedLocation>>
+    suspend fun getCurrentLocation(): Result<FixedLocation>
 
-    fun savedLocations(): Flow<List<SavedLocation>>
-    suspend fun getSuggestionsFromSearch(
-        term: String,
-        currentLat: Double,
-        currentLong: Double
-    ): List<AutocompletePrediction>
-
+    fun savedLocations(): Flow<List<LocationState.Fixed>>
     suspend fun getSuggestionsFromSearch(term: String): List<AutocompletePrediction>
-    suspend fun getLocationByID(id: String): SelectedLocation.Fixed?
-    suspend fun saveLocation(location: SavedLocation)
-    suspend fun deleteLocation(location: SavedLocation)
+
+    suspend fun getLocationByID(id: String): Result<LocationState.Fixed?>
+    suspend fun saveLocation(location: LocationState.Fixed)
+    suspend fun deleteLocation(location: LocationState.Fixed)
 }

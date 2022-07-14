@@ -102,7 +102,7 @@ class App : Application() {
                 val settings: WeatherSettings = get()
                 DarkSkyRepo(
                     darkSkyService = darkSkyRetrofit.create(DarkSkyService::class.java),
-                    apiKey = settings.apiKey
+                    apiKey = BuildConfig.DARK_SKY_KEY
                 )
             }
         }

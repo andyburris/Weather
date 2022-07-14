@@ -1,24 +1,31 @@
 package com.andb.apps.weather
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.andb.apps.weather.data.model.Conditions
 import com.andb.apps.weather.data.model.FixedLocation
 import com.andb.apps.weather.data.model.SelectedLocation
 import com.andb.apps.weather.data.repository.location.LocationRepo
 import com.andb.apps.weather.data.repository.weather.WeatherRepo
 import com.andb.apps.weather.ui.home.HomeScreenState
+import com.google.android.gms.tasks.RuntimeExecutionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-
-private val debugLocation =
-    SelectedLocation.Fixed("test", FixedLocation(0.0, 0.0, "Chautauqua", "NY")) //TODO: remove
 
 data class Machine(
     private val weatherRepo: WeatherRepo,
     private val locationRepo: LocationRepo,
     private val hasLocationPermission: Flow<Boolean>,
     private val coroutineScope: CoroutineScope,
+    private val onRequestLocationPermission: () -> Unit
 ) {
+
+    init {
+        coroutineScope.launch {
+            currentLocation.value = locationRepo.getCurrentLocation().toCurrentLocationState()
+        }
+    }
 
     sealed class Action(open val action: suspend Machine.() -> Unit) {
         object UpdateWeather : Action({
@@ -26,7 +33,7 @@ data class Machine(
                 is LocationState.WithLocation -> conditions.value = weatherRepo
                     .getForecast(locationState.location.latitude, locationState.location.longitude)
                     .toConditionState()
-                is LocationState.NoLocation -> {}
+                is LocationState.NoLocation -> throw Error("Shouldn't be able to update weather if no location")
             }
         })
 
@@ -37,59 +44,80 @@ data class Machine(
             })
 
             data class Fixed(val locationID: String) : SelectLocation({
-                this.selectedLocation.value =
-                    locationRepo.getLocationByID(locationID) ?: SelectedLocation.Current
+                this.selectedLocation.value = SelectedLocation.Fixed(locationID)
+                    ?: SelectedLocation.Current //TODO: work on double refresh that happens on delete
             })
         }
 
-        object Refresh : Action({
-            when (val locationState = location.value) {
-                is LocationState.Fixed -> conditions.value = weatherRepo
-                    .getForecast(locationState.location.latitude, locationState.location.longitude)
-                    .toConditionState()
-                is LocationState.Current.NoAccess -> {
-                    location.value = LocationState.Current.NotLoaded
+        sealed class CurrentLocation(override val action: suspend Machine.() -> Unit) :
+            Action(action) {
+            object RequestPermission : CurrentLocation({
+                onRequestLocationPermission.invoke()
+            })
+
+            object Refresh : CurrentLocation({
+                currentLocation.value = when (val currentVal = currentLocation.value) {
+                    LocationState.Current.NotLoaded -> throw Error("Should not be able to refresh NotLoaded")
+                    is LocationState.Current.Error -> currentVal.copy(isLoading = true)
+                    is LocationState.Current.Ok -> currentVal.copy(isLoading = true)
                 }
-                // if locationstate == fixed, refresh conditions
-                // if locationstate == current with permission, refresh current location
-                // if locationstate == current without permission, request permission? or do nothing? or throw error since it shouldn't be possible?
-            }
-        })
+                val newLocationState = locationRepo.getCurrentLocation().toCurrentLocationState()
+                currentLocation.value = newLocationState
+            })
+        }
     }
 
     fun handleAction(action: Action) {
         coroutineScope.launch { action.action.invoke(this@Machine) }
     }
 
-    private val selectedLocation = MutableStateFlow<SelectedLocation>(SelectedLocation.Current)
-    private val location = selectedLocation.map { selectedLocation ->
-        when (selectedLocation) {
-            is SelectedLocation.Fixed -> LocationState.Fixed(selectedLocation.fixedLocation)
-            SelectedLocation.Current -> locationRepo.getCurrentLocation()
-                .map { LocationState.Current.Found(it) }
-                .getOrDefault(LocationState.Current.NoPermission)
-        }
-    }.stateIn(coroutineScope, SharingStarted.Eagerly, LocationState.Current.NotLoaded)
-
     private val savedLocations = locationRepo.savedLocations()
-    private val loadingCurrentLocation = MutableStateFlow(false)
     private val currentLocation =
         MutableStateFlow<LocationState.Current>(LocationState.Current.NotLoaded)
-    private val conditions = MutableStateFlow<ConditionState>(ConditionState.Loading)
-    val homeScreen =
-        location.stateCombine(conditions, coroutineScope) { locationState, conditionState ->
-            println("zipping locationState = $locationState, conditionState = $conditionState")
-            HomeScreenState(location = locationState, conditionState = conditionState)
-        }
-}
 
-fun <T1, T2, R> StateFlow<T1>.stateCombine(
-    other: StateFlow<T2>,
-    coroutineScope: CoroutineScope,
-    transform: (T1, T2) -> R
-) = this
-    .combine(other) { t1, t2 -> transform(t1, t2) }
-    .stateIn(coroutineScope, SharingStarted.Eagerly, transform(this.value, other.value))
+    private val selectedLocation = MutableStateFlow<SelectedLocation>(SelectedLocation.Current)
+    private val location = combine(
+        selectedLocation,
+        currentLocation,
+        savedLocations
+    ) { selectedLocation, currentLocation, savedLocations ->
+        val newSelectedLocation = when (selectedLocation) {
+            is SelectedLocation.Fixed -> when (val foundLocation =
+                savedLocations.find { it.id == selectedLocation.id }) {
+                null -> currentLocation
+                else -> foundLocation
+            }
+            SelectedLocation.Current -> currentLocation
+        }
+        if (newSelectedLocation is LocationState.WithLocation) this.handleAction(Action.UpdateWeather)
+        return@combine newSelectedLocation
+    }.stateIn(coroutineScope, SharingStarted.Eagerly, LocationState.Current.NotLoaded)
+
+    private val conditions = MutableStateFlow<ConditionState>(ConditionState.NotLoaded)
+    val homeScreen = combine(
+        location,
+        conditions,
+        currentLocation,
+        savedLocations
+    ) { locationState, conditionState, currentLocation, savedLocations ->
+        println("zipping locationState = $locationState, conditionState = $conditionState")
+        HomeScreenState(
+            selectedLocation = locationState,
+            conditionState = conditionState,
+            currentLocation = currentLocation,
+            savedLocations = savedLocations,
+        )
+    }.stateIn(
+        coroutineScope,
+        SharingStarted.Eagerly,
+        HomeScreenState(
+            LocationState.Current.NotLoaded,
+            LocationState.Current.NotLoaded,
+            emptyList(),
+            ConditionState.NotLoaded
+        )
+    )
+}
 
 sealed interface LocationState {
     sealed interface NoLocation : LocationState
@@ -97,25 +125,62 @@ sealed interface LocationState {
         val location: FixedLocation
     }
 
-    sealed class Current(open val isLoading: Boolean) : LocationState {
-        object NotLoaded : Current(true), NoLocation
-        object NoPermission : Current(false), NoLocation
-        data class NoAccess(override val isLoading: Boolean) : Current(isLoading), NoLocation
-        data class Found(override val location: FixedLocation, override val isLoading: Boolean) :
-            Current(isLoading), WithLocation
+    sealed class Current : LocationState {
+        abstract val isLoading: Boolean
+
+        object NotLoaded : Current(), NoLocation {
+            override val isLoading: Boolean = true
+        }
+
+        data class Error(val error: CurrentLocationError, override val isLoading: Boolean) :
+            Current(), NoLocation
+
+        data class Ok(override val location: FixedLocation, override val isLoading: Boolean) :
+            Current(), WithLocation
     }
 
-    data class Fixed(val id: String, override val location: FixedLocation) : LocationState,
-        WithLocation
+    @Entity
+    data class Fixed(
+        @PrimaryKey val id: String,
+        override val location: FixedLocation,
+    ) : LocationState, WithLocation
 }
 
-val LocationState.hasLocation get() = this is LocationState.WithLocation
 
 sealed class ConditionState {
-    object Loading : ConditionState()
-    object Error : ConditionState()
-    data class Weather(val data: Conditions) : ConditionState()
+    abstract val isLoading: Boolean
+
+    object NotLoaded : ConditionState() {
+        override val isLoading: Boolean = true
+    }
+
+    data class Error(val error: ConditionError, override val isLoading: Boolean) : ConditionState()
+    data class Ok(val resource: Conditions, override val isLoading: Boolean) : ConditionState()
 }
 
-fun Result<Conditions>.toConditionState() =
-    this.map { ConditionState.Weather(it) }.getOrDefault(ConditionState.Error)
+sealed class CurrentLocationError {
+    object NoPermission : CurrentLocationError()
+    object NoAccess : CurrentLocationError()
+}
+
+sealed class ConditionError {
+    object NoInternet : ConditionError()
+}
+
+fun Result<Conditions>.toConditionState(): ConditionState = this
+    .map { ConditionState.Ok(it, false) }
+    .recover { ConditionState.Error(ConditionError.NoInternet, false) }
+    .getOrThrow()
+
+fun Result<FixedLocation>.toCurrentLocationState(): LocationState.Current = this
+    .map { LocationState.Current.Ok(it, false) }
+    .recover {
+        println("recovering, throwable = $it")
+        when (it) {
+            is RuntimeExecutionException, is SecurityException -> LocationState.Current.Error(
+                CurrentLocationError.NoPermission,
+                false
+            )
+            else -> LocationState.Current.Error(CurrentLocationError.NoAccess, false)
+        }
+    }.getOrThrow()

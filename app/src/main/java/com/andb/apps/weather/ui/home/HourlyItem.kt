@@ -41,7 +41,7 @@ fun HourlyItem(
         val barData =
             hourlyConditions.graphBarData(homeView = selectedView, globalRanges = globalRanges)
         val barHeight = animateFloatAsState(
-            targetValue = barData.percent.toFloat().coerceAtLeast(0.1f),
+            targetValue = barData.percent.toFloat(),
             animationSpec = animationSpec()
         )
         val barColor = animateColorAsState(
@@ -56,9 +56,8 @@ fun HourlyItem(
                         color = barColor.value,
                         shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                     )
-                    .fillMaxHeight(
-                        fraction = barHeight.value
-                    )
+                    .heightIn(min = 2.dp)
+                    .fillMaxHeight(fraction = barHeight.value)
                     .width(32.dp)
             )
         }

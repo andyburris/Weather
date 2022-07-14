@@ -37,18 +37,18 @@ fun UpperContent(
         )
         Spacer(modifier = Modifier.weight(1f))
         when (conditionState) {
-            ConditionState.Error -> {}
+            is ConditionState.Error -> {}
             else -> {
                 Column {
                     Text(
                         text = when (conditionState) {
-                            is ConditionState.Weather -> "${conditionState.data.current.temperature.roundToInt()}°"
+                            is ConditionState.Ok -> "${conditionState.resource.current.temperature.roundToInt()}°"
                             else -> "68°"
                         },
                         style = MaterialTheme.typography.h1,
                         color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.placeholder(
-                            visible = conditionState is ConditionState.Loading,
+                            visible = conditionState is ConditionState.NotLoaded,
                             shape = RoundedCornerShape(8.dp),
                             highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
                             color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
@@ -56,13 +56,13 @@ fun UpperContent(
                     )
                     Text(
                         text = when (conditionState) {
-                            is ConditionState.Weather -> "Feels like ${conditionState.data.current.apparentTemperature.roundToInt()}°"
+                            is ConditionState.Ok -> "Feels like ${conditionState.resource.current.apparentTemperature.roundToInt()}°"
                             else -> "Feels like 68°"
                         },
                         style = MaterialTheme.typography.body1,
                         color = MaterialTheme.colors.onPrimary,
                         modifier = Modifier.placeholder(
-                            visible = conditionState is ConditionState.Loading,
+                            visible = conditionState is ConditionState.NotLoaded,
                             shape = CircleShape,
                             highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
                             color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)

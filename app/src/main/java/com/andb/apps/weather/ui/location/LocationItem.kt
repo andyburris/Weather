@@ -11,30 +11,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.NearMe
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.andb.apps.weather.CurrentLocationError
 import com.andb.apps.weather.LocationState
 import com.andb.apps.weather.Machine
 import com.andb.apps.weather.ui.common.ErrorItem
 import com.andb.apps.weather.ui.theme.onBackgroundOverlay
 import com.andb.apps.weather.ui.theme.onBackgroundSecondary
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberPermissionState
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LocationItem(
     location: LocationState,
     modifier: Modifier = Modifier,
-    onSelectLocation: (Machine.Action.SelectLocation) -> Unit
+    onAction: (Machine.Action) -> Unit
 ) {
     Row(
         modifier = modifier
-            .clickable { onSelectLocation.invoke(location.toSelectLocationAction()) }
+            .then(when (location) {
+                is LocationState.WithLocation -> Modifier.clickable { onAction.invoke(location.toSelectLocationAction()) }
+                is LocationState.NoLocation -> Modifier
+            })
             .padding(horizontal = 24.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = when (location) {
@@ -68,26 +68,21 @@ fun LocationItem(
                 style = MaterialTheme.typography.subtitle1,
             )
 
-            when (location) {
-                is LocationState.Current.NoPermission -> {
-                    val locationPermissionState =
-                        rememberPermissionState(permission = android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    LaunchedEffect(locationPermissionState.status) {
-                        if (locationPermissionState.status is PermissionStatus.Granted) onSelectLocation.invoke(
-                            Machine.Action.SelectLocation.Current
+            if (location is LocationState.Current.Error) {
+                when (location.error) {
+                    CurrentLocationError.NoPermission -> {
+                        ErrorItem(
+                            title = "Permission Needed",
+                            actionIcon = Icons.Outlined.ChevronRight,
+                            onClick = { onAction.invoke(Machine.Action.CurrentLocation.RequestPermission) }
                         )
                     }
-                    ErrorItem(
-                        title = "Permission Needed",
-                        actionIcon = Icons.Outlined.ChevronRight,
-                        onClick = { locationPermissionState.launchPermissionRequest() }
+                    CurrentLocationError.NoAccess -> ErrorItem(
+                        title = "No Access",
+                        actionIcon = Icons.Outlined.Refresh,
+                        onClick = { onAction.invoke(Machine.Action.CurrentLocation.Refresh) }
                     )
                 }
-                is LocationState.Current.NoAccess -> ErrorItem(
-                    title = "Permission Needed",
-                    actionIcon = Icons.Outlined.ChevronRight,
-                    onClick = { onSelectLocation.invoke(Machine.Action.SelectLocation.Current) }
-                )
             }
         }
     }

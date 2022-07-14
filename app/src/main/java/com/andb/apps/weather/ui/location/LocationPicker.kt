@@ -21,7 +21,7 @@ fun LocationPicker(
     currentLocation: LocationState.Current,
     savedLocations: List<LocationState.Fixed>,
     modifier: Modifier = Modifier,
-    onSelectLocation: (Machine.Action.SelectLocation) -> Unit,
+    onAction: (Machine.Action) -> Unit,
 ) {
     val searchTerm = remember { mutableStateOf("") }
     Column(modifier = modifier) {
@@ -37,7 +37,7 @@ fun LocationPicker(
                 currentLocation = currentLocation,
                 savedLocations = savedLocations,
                 modifier = Modifier.padding(vertical = 12.dp),
-                onSelectLocation = onSelectLocation
+                onAction = onAction
             )
         }
     }
@@ -48,7 +48,7 @@ private fun SavedLocations(
     currentLocation: LocationState.Current,
     savedLocations: List<LocationState.Fixed>,
     modifier: Modifier = Modifier,
-    onSelectLocation: (Machine.Action.SelectLocation) -> Unit,
+    onAction: (Machine.Action) -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -59,9 +59,9 @@ private fun SavedLocations(
             color = MaterialTheme.colors.onBackgroundSecondary,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
         )
-        LocationItem(location = currentLocation, onSelectLocation = onSelectLocation)
+        LocationItem(location = currentLocation, onAction = onAction)
         savedLocations.forEach { location ->
-            LocationItem(location = location, onSelectLocation = onSelectLocation)
+            LocationItem(location = location, onAction = onAction)
         }
     }
 }

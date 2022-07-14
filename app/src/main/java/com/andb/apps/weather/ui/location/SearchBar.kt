@@ -34,11 +34,13 @@ fun SearchBar(
             ) {
                 Icon(imageVector = Icons.Outlined.Search, contentDescription = null)
                 Box(contentAlignment = Alignment.CenterStart) {
-                    Text(
-                        text = placeholder,
-                        style = MaterialTheme.typography.body1,
-                        color = MaterialTheme.colors.onBackgroundTertiary
-                    )
+                    if (term.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            style = MaterialTheme.typography.body1,
+                            color = MaterialTheme.colors.onBackgroundTertiary
+                        )
+                    }
                     innerTextField()
                 }
             }

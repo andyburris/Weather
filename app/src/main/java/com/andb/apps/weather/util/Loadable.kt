@@ -1,5 +1,6 @@
 package com.andb.apps.weather.util
 
+
 sealed class Loadable<T, E> {
     abstract val isLoading: Boolean
 

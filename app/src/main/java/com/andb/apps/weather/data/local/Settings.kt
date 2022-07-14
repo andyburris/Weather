@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-val DEBUG_OFFLINE = true
+val DEBUG_OFFLINE = false
 
 data class WeatherSettings(
     private val settings: FlowSettings,

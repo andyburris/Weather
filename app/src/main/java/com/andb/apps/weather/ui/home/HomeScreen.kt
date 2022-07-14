@@ -18,23 +18,16 @@ import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.LocationState
 import com.andb.apps.weather.Machine
 import com.andb.apps.weather.data.model.ConditionCode
-import com.andb.apps.weather.data.model.SelectedLocation
 import com.andb.apps.weather.ui.location.LocationPicker
 import com.andb.apps.weather.ui.test.background.WeatherBackground
 
 
 data class HomeScreenState(
-    val selectedLocation: SelectedLocation,
+    val selectedLocation: LocationState,
     val currentLocation: LocationState.Current,
     val savedLocations: List<LocationState.Fixed>,
     val conditionState: ConditionState,
-) {
-    val location: LocationState
-        get() = when (selectedLocation) {
-            SelectedLocation.Current -> currentLocation
-            is SelectedLocation.Fixed -> savedLocations.first { it.id == selectedLocation.id }
-        }
-}
+)
 
 @Composable
 fun HomeScreen(state: HomeScreenState, onAction: (Machine.Action) -> Unit) {
@@ -42,7 +35,7 @@ fun HomeScreen(state: HomeScreenState, onAction: (Machine.Action) -> Unit) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         content = {
-            when (val location = state.location) {
+            when (val location = state.selectedLocation) {
                 is LocationState.WithLocation -> WithLocation(
                     locationState = location,
                     conditionState = state.conditionState,
@@ -53,7 +46,7 @@ fun HomeScreen(state: HomeScreenState, onAction: (Machine.Action) -> Unit) {
                     currentLocation = state.currentLocation,
                     savedLocations = state.savedLocations,
                     modifier = Modifier.padding(it),
-                    onSelectLocation = onAction,
+                    onAction = onAction,
                 )
             }
 
@@ -66,7 +59,7 @@ private fun NoLocation(
     currentLocation: LocationState.Current,
     savedLocations: List<LocationState.Fixed>,
     modifier: Modifier = Modifier,
-    onSelectLocation: (Machine.Action.SelectLocation) -> Unit,
+    onAction: (Machine.Action) -> Unit,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -76,7 +69,7 @@ private fun NoLocation(
         LocationPicker(
             currentLocation = currentLocation,
             savedLocations = savedLocations,
-            onSelectLocation = onSelectLocation,
+            onAction = onAction,
             modifier = Modifier
                 .background(MaterialTheme.colors.background, MaterialTheme.shapes.large)
                 .fillMaxWidth()
@@ -93,7 +86,13 @@ private fun WithLocation(
 ) {
     val (selectedView, onSelectView) = remember { mutableStateOf(HomeView.Summary) }
     BoxWithConstraints(modifier = modifier) {
-        WeatherBackground(conditionCode = ConditionCode.CLEAR, daytime = true)
+        WeatherBackground(
+            conditionCode = when (conditionState) {
+                is ConditionState.Ok -> conditionState.resource.current.icon
+                else -> ConditionCode.PARTLY_CLOUDY
+            },
+            daytime = true
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()

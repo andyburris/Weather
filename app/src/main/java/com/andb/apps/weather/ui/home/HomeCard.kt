@@ -31,6 +31,8 @@ fun HomeCard(
     onAction: (Machine.Action) -> Unit
 ) {
     val density = LocalDensity.current
+    val measureItemModifier =
+        Modifier.onGloballyPositioned { with(density) { onFirstItemMeasured(it.size.height.toDp()) } }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -39,27 +41,13 @@ fun HomeCard(
             .clip(MaterialTheme.shapes.large),
     ) {
         when (conditionState) {
-            ConditionState.Error -> ErrorItem(
-                title = "Connection Error",
-                description = "Click to refresh",
-                actionIcon = Icons.Outlined.Refresh,
-                leadingIcon = Icons.Outlined.CloudOff,
-                modifier = Modifier
-                    .onGloballyPositioned { with(density) { onFirstItemMeasured(it.size.height.toDp()) } }
-                    .padding(16.dp),
-                onClick = { onAction.invoke(Machine.Action.UpdateWeather) }
-            )
-            ConditionState.Loading -> ErrorItem(
-                title = "Loading data...",
-                description = "",
-                actionIcon = Icons.Outlined.Refresh,
-                modifier = Modifier
-                    .onGloballyPositioned { with(density) { onFirstItemMeasured(it.size.height.toDp()) } }
-                    .padding(16.dp),
-                onClick = { onAction.invoke(Machine.Action.UpdateWeather) }
-            )
-            is ConditionState.Weather -> DailyItems(
-                conditions = conditionState.data,
+            is ConditionState.Error -> when (conditionState.isLoading) {
+                true -> ConditionLoadingItem(measureItemModifier)
+                false -> ConditionErrorItem(measureItemModifier) { onAction.invoke(Machine.Action.UpdateWeather) }
+            }
+            is ConditionState.NotLoaded -> ConditionLoadingItem(measureItemModifier)
+            is ConditionState.Ok -> DailyItems(
+                conditions = conditionState.resource,
                 selectedView = selectedView,
                 onFirstCardMeasured = onFirstItemMeasured
             )
@@ -69,6 +57,33 @@ fun HomeCard(
             onOpenSettings = {}
         )
     }
+}
+
+@Composable
+private fun ConditionErrorItem(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    ErrorItem(
+        title = "Connection Error",
+        description = "Click to refresh",
+        actionIcon = Icons.Outlined.Refresh,
+        leadingIcon = Icons.Outlined.CloudOff,
+        modifier = Modifier.padding(16.dp),
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun ConditionLoadingItem(
+    modifier: Modifier = Modifier,
+) {
+    ErrorItem(
+        title = "Loading data...",
+        description = "",
+        actionIcon = Icons.Outlined.Refresh,
+        modifier = modifier.padding(16.dp),
+    )
 }
 
 @Composable
