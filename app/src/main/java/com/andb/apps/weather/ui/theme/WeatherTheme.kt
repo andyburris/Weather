@@ -38,23 +38,30 @@ object WeatherColors {
         )
     }
 
-    fun skyColor(conditionCode: ConditionCode) = when (conditionCode) {
-        ConditionCode.CLEAR -> Color(0xFFEDBA1E) to Color.Black
-        ConditionCode.RAIN -> Color(0xFF0679FF) to Color.Black
+    fun ConditionCode.skyColor(daytime: Boolean) = when (this) {
+        ConditionCode.CLEAR -> Color(0xFFEDBA1E) to Color(0xFF101112)
+        ConditionCode.RAIN -> Color(0xFF0679FF) to Color(0xFF023E7D)
         ConditionCode.THUNDERSTORM -> Color(0xFF7491F9) to Color(0xFF242F57)
-        ConditionCode.SNOW -> Color(0xFFD5E8FF) to Color.Black
-        ConditionCode.SLEET -> Color(0xFFC4D2DE) to Color.Black
-        ConditionCode.HAIL -> Color(0xFFD5E8FF) to Color.Black
-        ConditionCode.WIND -> Color(0xFF27AE60) to Color.Black
-        ConditionCode.FOG -> Color(0xFFC5CDD5) to Color.Black
-        ConditionCode.CLOUDY -> Color(0xFF88AACD) to Color.Black
-        ConditionCode.PARTLY_CLOUDY -> Color(0xFF3CADFF) to Color.Black
+        ConditionCode.SNOW -> Color(0xFFD5E8FF) to Color(0xFF2B2E30)
+        ConditionCode.SLEET -> Color(0xFFC4D2DE) to Color(0xFF222C34)
+        ConditionCode.HAIL -> Color(0xFFD5E8FF) to Color(0xFF222C34)
+        ConditionCode.WIND -> Color(0xFF27AE60) to Color(0xFF111C16)
+        ConditionCode.FOG -> Color(0xFF7A8085) to Color(0xFF17191C)
+        ConditionCode.CLOUDY -> Color(0xFF88AACD) to Color(0xFF131420)
+        ConditionCode.PARTLY_CLOUDY -> Color(0xFF3CADFF) to Color(0xFF0F212E)
         ConditionCode.NONE -> Color.White to Color.Black
-    }
+    }.let { if (daytime) it.first else it.second }
 
     object Overlay {
-        val clearSunOverlay: Color = Color.Black.copy(alpha = 0.05f)
-        val fogOverlay: Color = Color.Black.copy(alpha = 0.05f)
+        fun clear(daytime: Boolean) = when (daytime) {
+            true -> Color.White.copy(alpha = 0.20f)
+            false -> Color.White.copy(alpha = 0.15f)
+        }
+
+        fun fog(daytime: Boolean) = when (daytime) {
+            true -> Color.Black.copy(alpha = 0.05f)
+            false -> Color.White.copy(alpha = 0.05f)
+        }
 
         enum class Rain(val color: Color) {
             primaryDroplet(Color(0x1FFFFFFF)),

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.andb.apps.weather.data.model.ConditionCode
 import com.andb.apps.weather.ui.theme.WeatherColors
+import com.andb.apps.weather.ui.theme.WeatherColors.skyColor
 
 @Composable
 fun WeatherBackground(
@@ -23,11 +24,11 @@ fun WeatherBackground(
     LaunchedEffect(rotation) {
         onRotationChange.invoke(rotation.rotation2D, rotation.rotation3D)
     }
-    Background(conditionCode = conditionCode, modifier = modifier) {
+    Background(conditionCode = conditionCode, daytime = daytime, modifier = modifier) {
         when (conditionCode) {
-            ConditionCode.CLEAR -> Sun(rotationState = rotation)
+            ConditionCode.CLEAR -> Sun(rotationState = rotation, daytime = daytime)
             ConditionCode.CLOUDY -> Clouds(rotationState = rotation)
-            ConditionCode.FOG -> Fog(modifier.fillMaxSize())
+            ConditionCode.FOG -> Fog(daytime, modifier.fillMaxSize())
             ConditionCode.HAIL -> Precipitation(config = hailConfig, rotationState = rotation)
             ConditionCode.NONE -> Box {}
             ConditionCode.PARTLY_CLOUDY -> Clouds(rotationState = rotation)
@@ -51,7 +52,7 @@ fun WeatherBackground(
                 Clouds(rotationState = rotation, modifier = Modifier.fillMaxSize())
                 Precipitation(config = rainConfig, rotationState = rotation)
             }
-            ConditionCode.WIND -> Wind(rotationState = rotation)
+            ConditionCode.WIND -> Wind(rotationState = rotation, daytime = daytime)
         }
     }
 }
@@ -59,10 +60,11 @@ fun WeatherBackground(
 @Composable
 private fun Background(
     conditionCode: ConditionCode,
+    daytime: Boolean,
     modifier: Modifier,
     content: @Composable BoxScope.() -> Unit
 ) = Box(
-    modifier = modifier.background(WeatherColors.skyColor(conditionCode).first),
+    modifier = modifier.background(conditionCode.skyColor(daytime)),
     content = content
 )
 

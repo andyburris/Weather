@@ -20,6 +20,7 @@ import com.andb.apps.weather.Machine
 import com.andb.apps.weather.data.model.ConditionCode
 import com.andb.apps.weather.ui.location.LocationPicker
 import com.andb.apps.weather.ui.test.background.WeatherBackground
+import com.andb.apps.weather.util.isDaytime
 
 
 data class HomeScreenState(
@@ -65,7 +66,7 @@ private fun NoLocation(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        WeatherBackground(conditionCode = ConditionCode.PARTLY_CLOUDY, daytime = true)
+        WeatherBackground(conditionCode = ConditionCode.PARTLY_CLOUDY, daytime = null.isDaytime())
         LocationPicker(
             currentLocation = currentLocation,
             savedLocations = savedLocations,
@@ -91,7 +92,7 @@ private fun WithLocation(
                 is ConditionState.Ok -> conditionState.resource.current.icon
                 else -> ConditionCode.PARTLY_CLOUDY
             },
-            daytime = true
+            daytime = conditionState.isDaytime()
         )
         Column(
             modifier = Modifier

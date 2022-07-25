@@ -14,7 +14,7 @@ import com.andb.apps.weather.ui.theme.WeatherColors
 private const val amountOfWindLines = 8
 
 @Composable
-internal fun Wind(rotationState: RotationState, modifier: Modifier = Modifier) {
+internal fun Wind(rotationState: RotationState, daytime: Boolean, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val lines = remember {
             (0 until amountOfWindLines).map { randomWindLine(this.minWidth) }
@@ -38,7 +38,7 @@ internal fun Wind(rotationState: RotationState, modifier: Modifier = Modifier) {
                         line.forEach { segment ->
                             Box(
                                 modifier = Modifier
-                                    .background(WeatherColors.Overlay.fogOverlay, CircleShape)
+                                    .background(WeatherColors.Overlay.fog(daytime), CircleShape)
                                     .requiredSize(width = segment, height = 8.dp)
                             )
                         }

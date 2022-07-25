@@ -16,7 +16,7 @@ private const val amountOfFogLines = 16
 
 
 @Composable
-internal fun Fog(modifier: Modifier = Modifier) {
+internal fun Fog(daytime: Boolean, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         val lines = remember {
             (0 until amountOfFogLines).map { randomFogLine(this.minWidth) }
@@ -43,7 +43,7 @@ internal fun Fog(modifier: Modifier = Modifier) {
                         line.forEach { segment ->
                             Box(
                                 modifier = Modifier
-                                    .background(WeatherColors.Overlay.fogOverlay, CircleShape)
+                                    .background(WeatherColors.Overlay.fog(daytime), CircleShape)
                                     .requiredSize(width = segment, height = 8.dp)
                             )
                         }

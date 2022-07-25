@@ -95,7 +95,7 @@ data class DarkSkyDailyConditions(
     @field:Json(name = "moonPhase") val moonPhase: Double,
     @field:Json(name = "precipIntensity") val precipIntensity: Double,
     @field:Json(name = "precipIntensityMax") val precipIntensityMax: Double,
-    @field:Json(name = "precipIntensityMaxTime") val precipIntensityMaxTime: LocalDateTime,
+    @field:Json(name = "precipIntensityMaxTime") val precipIntensityMaxTime: LocalDateTime?,
     @field:Json(name = "precipProbability") val precipProbability: Double,
     @field:Json(name = "precipType") val precipType: String?,
     @field:Json(name = "temperatureHigh") val temperatureHigh: Double,

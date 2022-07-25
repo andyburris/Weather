@@ -4,27 +4,37 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andb.apps.weather.R
 
 val weatherColors = lightColors(
 
 )
 
-val weatherTypography = Typography(
-    defaultFontFamily = FontFamily.Default,
-    h1 = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 48.sp,
-    ),
-    h6 = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 20.sp,
-    ),
-    subtitle1 = TextStyle(
-        fontWeight = FontWeight.Medium,
+val weatherTypography
+    @Composable get() = Typography(
+        defaultFontFamily = FontFamily(
+            fonts = listOf(
+                Font(R.font.interregular, weight = FontWeight.Normal),
+                Font(R.font.intermedium, weight = FontWeight.Medium),
+                Font(R.font.intersemibold, weight = FontWeight.SemiBold),
+                Font(R.font.interbold, weight = FontWeight.Bold)
+            )
+        ),
+        h1 = TextStyle(
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 48.sp,
+        ),
+        h6 = TextStyle(
+            fontWeight = FontWeight.Medium,
+            fontSize = 20.sp,
+        ),
+        subtitle1 = TextStyle(
+            fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
     ),
     body1 = TextStyle(

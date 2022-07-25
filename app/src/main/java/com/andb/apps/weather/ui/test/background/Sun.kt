@@ -39,7 +39,7 @@ private val OctagonShape = GenericShape { size, layoutDirection ->
 }
 
 @Composable
-internal fun Sun(rotationState: RotationState, modifier: Modifier = Modifier) {
+internal fun Sun(rotationState: RotationState, daytime: Boolean, modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize()) {
         (0 until 6).forEach { level ->
             val size = 208.dp + (96.dp * level)
@@ -60,7 +60,7 @@ internal fun Sun(rotationState: RotationState, modifier: Modifier = Modifier) {
                     .rotate(rotation.value)
                     .drawWithContent {
                         val paint = Paint().apply {
-                            color = WeatherColors.Overlay.clearSunOverlay
+                            color = WeatherColors.Overlay.clear(daytime)
                             pathEffect =
                                 PathEffect.cornerPathEffect(with(Density(this@drawWithContent.density)) { 16.dp.toPx() })
                         }
@@ -76,7 +76,7 @@ internal fun Sun(rotationState: RotationState, modifier: Modifier = Modifier) {
                         }
 
                     }
-                    .background(WeatherColors.Overlay.clearSunOverlay, shape = OctagonShape)
+                    .background(WeatherColors.Overlay.clear(daytime), shape = OctagonShape)
                     .requiredSize(size)
             )
         }
