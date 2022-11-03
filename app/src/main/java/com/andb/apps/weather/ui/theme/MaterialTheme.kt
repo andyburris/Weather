@@ -1,7 +1,12 @@
 package com.andb.apps.weather.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Colors
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Shapes
+import androidx.compose.material.Typography
+import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -70,3 +75,4 @@ val Colors.onBackgroundSecondary @Composable get() = MaterialTheme.colors.onBack
 val Colors.onBackgroundTertiary @Composable get() = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.low)
 val Colors.onBackgroundDivider @Composable get() = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
 val Colors.onBackgroundOverlay @Composable get() = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.overlay)
+val Colors.onPrimarySecondary @Composable get() = MaterialTheme.colors.onPrimary.copy(alpha = ContentAlpha.medium)

@@ -1,6 +1,8 @@
 package com.andb.apps.weather.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,12 +12,15 @@ import androidx.compose.material.ContentAlpha
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.LocationState
 import com.andb.apps.weather.ui.theme.divider
+import com.andb.apps.weather.ui.theme.onPrimarySecondary
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.placeholder
 import com.google.accompanist.placeholder.shimmer
@@ -25,21 +30,28 @@ import kotlin.math.roundToInt
 fun UpperContent(
     locationState: LocationState.WithLocation,
     conditionState: ConditionState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenLocationPicker: () -> Unit,
 ) {
     Column(
-        modifier = modifier.padding(16.dp),
+        modifier = modifier,
     ) {
         LocationHeader(
             locationState = locationState,
             modifier = Modifier.fillMaxWidth(),
-            onClick = {} //TODO: open location dialog
+            onClick = onOpenLocationPicker
         )
         Spacer(modifier = Modifier.weight(1f))
         when (conditionState) {
             is ConditionState.Error -> {}
             else -> {
-                Column {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
                     Text(
                         text = when (conditionState) {
                             is ConditionState.Ok -> "${conditionState.resource.current.temperature.roundToInt()}°"
@@ -47,12 +59,14 @@ fun UpperContent(
                         },
                         style = MaterialTheme.typography.h1,
                         color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.placeholder(
-                            visible = conditionState is ConditionState.NotLoaded,
-                            shape = RoundedCornerShape(8.dp),
-                            highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
-                            color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
-                        ),
+                        modifier = Modifier
+                            .placeholder(
+                                visible = conditionState is ConditionState.NotLoaded,
+                                shape = RoundedCornerShape(8.dp),
+                                highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
+                                color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
+                            )
+                            .alignBy(LastBaseline),
                     )
                     Text(
                         text = when (conditionState) {
@@ -60,13 +74,15 @@ fun UpperContent(
                             else -> "Feels like 68°"
                         },
                         style = MaterialTheme.typography.body1,
-                        color = MaterialTheme.colors.onPrimary,
-                        modifier = Modifier.placeholder(
-                            visible = conditionState is ConditionState.NotLoaded,
-                            shape = CircleShape,
-                            highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
-                            color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
-                        ),
+                        color = MaterialTheme.colors.onPrimarySecondary,
+                        modifier = Modifier
+                            .placeholder(
+                                visible = conditionState is ConditionState.NotLoaded,
+                                shape = CircleShape,
+                                highlight = PlaceholderHighlight.shimmer(Color.White.copy(alpha = 0.12f)),
+                                color = MaterialTheme.colors.onBackground.copy(alpha = ContentAlpha.divider)
+                            )
+                            .alignBy(LastBaseline),
                     )
                 }
             }
