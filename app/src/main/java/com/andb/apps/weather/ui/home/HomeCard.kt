@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -18,8 +20,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.Machine
+import com.andb.apps.weather.Screen
 import com.andb.apps.weather.data.model.Conditions
 import com.andb.apps.weather.ui.common.ErrorItem
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
@@ -54,7 +59,7 @@ fun HomeCard(
         }
         Footer(
             Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
-            onOpenSettings = {}
+            onOpenSettings = { onAction.invoke(Machine.Action.OpenScreen(Screen.Settings)) }
         )
     }
 }
@@ -104,18 +109,27 @@ private fun DailyItems(
     Column(modifier = modifier) {
         conditions.days.forEachIndexed { index, dayItem ->
             val density = LocalDensity.current
+            val coroutineScope = rememberCoroutineScope()
+            val scrollDispatcher: MutableSharedFlow<Float> = remember { MutableSharedFlow() }
             DailyItem(
                 dayItem = dayItem,
                 globalRanges = globalRanges,
                 selectedView = selectedView,
+
                 modifier = Modifier
                     .then(if (index == 0) Modifier.onGloballyPositioned {
                         with(density) {
-                            println("measuring first card, height = ${it.size.height.toDp()}")
                             onFirstCardMeasured(it.size.height.toDp())
                         }
                     } else Modifier)
-                    .padding(vertical = 24.dp)
+                    .padding(vertical = 24.dp),
+                scrollDispatcher = scrollDispatcher,
+                onDispatchScroll = { dragAmount ->
+                    coroutineScope.launch {
+                        scrollDispatcher.emit(dragAmount)
+                        println("dispatching scroll of ${dragAmount}px")
+                    }
+                }
             )
         }
     }

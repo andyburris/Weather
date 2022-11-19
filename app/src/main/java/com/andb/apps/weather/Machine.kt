@@ -10,7 +10,12 @@ import com.andb.apps.weather.data.repository.weather.WeatherRepo
 import com.andb.apps.weather.ui.home.HomeScreenState
 import com.google.android.gms.tasks.RuntimeExecutionException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class Machine(
@@ -28,11 +33,16 @@ data class Machine(
     }
 
     sealed class Action(open val action: suspend Machine.() -> Unit) {
+        data class OpenScreen(val screen: Screen) : Action({
+            this.selectedScreen.value = screen
+        })
+
         object UpdateWeather : Action({
             when (val locationState = location.value) {
                 is LocationState.WithLocation -> conditions.value = weatherRepo
                     .getForecast(locationState.location.latitude, locationState.location.longitude)
                     .toConditionState()
+
                 is LocationState.NoLocation -> throw Error("Shouldn't be able to update weather if no location")
             }
         })
@@ -94,7 +104,7 @@ data class Machine(
     }.stateIn(coroutineScope, SharingStarted.Eagerly, LocationState.Current.NotLoaded)
 
     private val conditions = MutableStateFlow<ConditionState>(ConditionState.NotLoaded)
-    val homeScreen = combine(
+    val homeScreenState: StateFlow<HomeScreenState> = combine(
         location,
         conditions,
         currentLocation,
@@ -117,6 +127,15 @@ data class Machine(
             ConditionState.NotLoaded
         )
     )
+
+    private val selectedScreen: MutableStateFlow<Screen> = MutableStateFlow(Screen.Home)
+    val currentScreenState: StateFlow<ScreenState> =
+        selectedScreen.combine(homeScreenState) { screen, homeScreenState ->
+            when (screen) {
+                Screen.Home -> homeScreenState
+                else -> SettingsState
+            }
+        }.stateIn(coroutineScope, SharingStarted.Eagerly, homeScreenState.value)
 }
 
 sealed interface LocationState {
@@ -181,6 +200,15 @@ fun Result<FixedLocation>.toCurrentLocationState(): LocationState.Current = this
                 CurrentLocationError.NoPermission,
                 false
             )
+
             else -> LocationState.Current.Error(CurrentLocationError.NoAccess, false)
         }
     }.getOrThrow()
+
+enum class Screen {
+    Home, Settings, Test
+}
+
+interface ScreenState
+
+object SettingsState : ScreenState

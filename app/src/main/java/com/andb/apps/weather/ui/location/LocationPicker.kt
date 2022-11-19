@@ -65,3 +65,12 @@ private fun SavedLocations(
         }
     }
 }
+
+@Composable
+private fun SearchLocation(
+    searchTerm: String,
+    modifier: Modifier = Modifier,
+    onAction: (Machine.Action) -> Unit,
+) {
+
+}

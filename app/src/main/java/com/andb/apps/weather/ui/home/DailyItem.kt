@@ -1,15 +1,29 @@
 package com.andb.apps.weather.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
@@ -18,6 +32,7 @@ import com.andb.apps.weather.ui.theme.onBackgroundDivider
 import com.andb.apps.weather.ui.theme.onBackgroundSecondary
 import com.andb.apps.weather.ui.theme.onBackgroundTertiary
 import com.andb.apps.weather.util.size
+import kotlinx.coroutines.flow.SharedFlow
 import kotlin.math.roundToInt
 
 data class GlobalRanges(
@@ -30,7 +45,9 @@ fun DailyItem(
     dayItem: DayItem,
     globalRanges: GlobalRanges,
     selectedView: HomeView,
+    scrollDispatcher: SharedFlow<Float>,
     modifier: Modifier = Modifier,
+    onDispatchScroll: (dragAmount: Float) -> Unit
 ) {
     Column(
         modifier = modifier,
@@ -58,7 +75,9 @@ fun DailyItem(
         HomeViewWidget(
             selectedView = selectedView,
             dayItem = dayItem,
-            globalRanges = globalRanges
+            globalRanges = globalRanges,
+            scrollDispatcher = scrollDispatcher,
+            onDispatchScroll = onDispatchScroll,
         )
     }
 }
@@ -84,9 +103,10 @@ private fun TemperatureWidget(
                 .background(MaterialTheme.colors.onBackgroundDivider, CircleShape)
                 .weight(1f)
         ) {
-            val width = this.maxWidth * (dailyScale.size.toFloat() / globalScale.size.toFloat())
+            val scalePercent = dailyScale.size.toFloat() / globalScale.size.toFloat()
+            val width = this.maxWidth * scalePercent
             val paddingStart =
-                width * ((dailyScale.first - globalScale.first) / globalScale.size.toFloat())
+                this.maxWidth * ((dailyScale.first - globalScale.first) / globalScale.size.toFloat())
             Box(
                 modifier = Modifier
                     .padding(start = paddingStart)
@@ -103,31 +123,56 @@ private fun TemperatureWidget(
     }
 }
 
+data class SyncScrollState(
+    val currentlyDragging: DayItem,
+    val hourOffset: Int,
+    val lazyListState: LazyListState
+)
 @Composable
 private fun HomeViewWidget(
     selectedView: HomeView,
     dayItem: DayItem,
     globalRanges: GlobalRanges,
+    scrollDispatcher: SharedFlow<Float>,
     modifier: Modifier = Modifier,
+    onDispatchScroll: (dragAmount: Float) -> Unit,
 ) {
     when (selectedView) {
         HomeView.Summary -> Summary(
             dayItem = dayItem,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
-        else -> LazyRow(
-            modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.Bottom,
-            contentPadding = PaddingValues(horizontal = 24.dp),
-        ) {
-            items(dayItem.hourly) { hourlyConditions ->
-                HourlyItem(
-                    selectedView = selectedView,
-                    hourlyConditions = hourlyConditions,
-                    globalRanges = globalRanges,
-                    modifier = Modifier.height(60.dp)
-                )
+
+        else -> {
+            val lazyListState = rememberLazyListState()
+            LaunchedEffect(dayItem.day.date.dayOfMonth) {
+                println("collecting scrollDispatcher, today = ${dayItem.day.date.dayOfMonth}")
+                scrollDispatcher.collect { dragAmount ->
+                    println("collecting scroll of ${dragAmount}px, today = ${dayItem.day.date.dayOfMonth}")
+                    lazyListState.scroll { this.scrollBy(dragAmount) }
+                }
+            }
+            val thisHourOffset = dayItem.hourly.minBy { it.time }.time.hour
+            LazyRow(
+                modifier = modifier
+                    .pointerInput(Unit) {
+                        this.detectDragGesturesAfterLongPress(
+                            onDrag = { change, dragAmount -> onDispatchScroll.invoke(-dragAmount.x) }
+                        )
+                    },
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.Bottom,
+                contentPadding = PaddingValues(horizontal = 24.dp),
+                state = lazyListState,
+            ) {
+                items(dayItem.hourly) { hourlyConditions ->
+                    HourlyItem(
+                        selectedView = selectedView,
+                        hourlyConditions = hourlyConditions,
+                        globalRanges = globalRanges,
+                        modifier = Modifier.height(60.dp)
+                    )
+                }
             }
         }
     }

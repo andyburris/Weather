@@ -85,8 +85,9 @@ class LocationRepoImpl(
     override suspend fun deleteLocation(location: LocationState.Fixed) = locationsDao
         .removeLocation(location.toSavedLocation())
 
-    fun Location.toFixedLocation(): FixedLocation {
-        val address = geocoder.getFromLocation(this.latitude, this.longitude, 1)[0]
+    suspend fun Location.toFixedLocation(): FixedLocation? {
+        val address =
+            geocoder.getFromLocation(this.latitude, this.longitude, 1)?.get(0) ?: return null
         Log.d("getSelectedLocation", "current location address: $address")
         return FixedLocation(
             this.latitude,

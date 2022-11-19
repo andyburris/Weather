@@ -28,19 +28,19 @@ import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.LocationState
 import com.andb.apps.weather.Machine
+import com.andb.apps.weather.ScreenState
 import com.andb.apps.weather.data.model.ConditionCode
 import com.andb.apps.weather.ui.location.LocationPicker
 import com.andb.apps.weather.ui.test.background.WeatherBackground
 import com.andb.apps.weather.ui.theme.onBackgroundTertiary
 import com.andb.apps.weather.util.isDaytime
 
-
 data class HomeScreenState(
     val selectedLocation: LocationState,
     val currentLocation: LocationState.Current,
     val savedLocations: List<LocationState.Fixed>,
     val conditionState: ConditionState,
-)
+) : ScreenState
 
 data class LocationPickerState(
     val currentLocation: LocationState.Current,

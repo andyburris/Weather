@@ -1,11 +1,13 @@
 package com.andb.apps.weather.util
 
 import android.content.res.Resources
+import androidx.compose.ui.graphics.Color
 import com.andb.apps.weather.ConditionState
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import kotlin.random.Random
 
 
 fun secondsToLocalDateTime(seconds: Long): LocalDateTime {
@@ -25,3 +27,5 @@ fun ConditionState?.isDaytime() = when (this) {
     is ConditionState.Ok -> this.resource.current.time in this.resource.days.first().day.let { it.sunriseTime..it.sunsetTime }
     else -> LocalTime.now() in LocalTime.of(6, 0)..LocalTime.of(19, 0)
 }
+
+fun randomColor(): Color = Color(Random.nextInt(255), Random.nextInt(255), Random.nextInt(255))
