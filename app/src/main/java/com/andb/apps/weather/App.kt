@@ -18,10 +18,15 @@ import com.andb.apps.weather.data.model.climacell.ClimacellWindDirectionAdapter
 import com.andb.apps.weather.data.model.climacell.LocalDateAdapter
 import com.andb.apps.weather.data.model.climacell.ZonedDateTimeAdapter
 import com.andb.apps.weather.data.model.darksky.ZoneOffsetAdapter
-import com.andb.apps.weather.data.remote.DarkSkyService
+import com.andb.apps.weather.data.remote.WeatherKitService
 import com.andb.apps.weather.data.repository.location.LocationRepo
 import com.andb.apps.weather.data.repository.location.LocationRepoImpl
-import com.andb.apps.weather.data.repository.weather.*
+import com.andb.apps.weather.data.repository.weather.MockProviderRepo
+import com.andb.apps.weather.data.repository.weather.ProviderRepo
+import com.andb.apps.weather.data.repository.weather.WeatherKitConfig
+import com.andb.apps.weather.data.repository.weather.WeatherKitRepo
+import com.andb.apps.weather.data.repository.weather.WeatherRepo
+import com.andb.apps.weather.data.repository.weather.WeatherRepoImpl
 import com.chibatching.kotpref.Kotpref
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -40,7 +45,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import java.util.*
+import java.util.Locale
 
 val Context.datastore: DataStore<Preferences> by preferencesDataStore("settings")
 
@@ -82,6 +87,13 @@ class App : Application() {
                 .addConverterFactory(MoshiConverterFactory.create(get()))
                 .build()
         }
+        single(named("weatherKitRetrofit")) {
+            Retrofit.Builder()
+                .client(get())
+                .baseUrl("https://weatherkit.apple.com/")
+                .addConverterFactory(MoshiConverterFactory.create(get()))
+                .build()
+        }
 
         single<FusedLocationProviderClient> {
             LocationServices.getFusedLocationProviderClient(
@@ -99,10 +111,21 @@ class App : Application() {
                 MockProviderRepo(get())
             } else {
                 val darkSkyRetrofit: Retrofit = get(named("darkSkyRetrofit"))
+                val weatherKitRetrofit: Retrofit = get(named("weatherKitRetrofit"))
                 val settings: WeatherSettings = get()
-                DarkSkyRepo(
-                    darkSkyService = darkSkyRetrofit.create(DarkSkyService::class.java),
-                    apiKey = BuildConfig.DARK_SKY_KEY
+                /*                DarkSkyRepo(
+                                    darkSkyService = darkSkyRetrofit.create(DarkSkyService::class.java),
+                                    apiKey = BuildConfig.DARK_SKY_KEY
+                                )*/
+                WeatherKitRepo(
+                    weatherKitService = weatherKitRetrofit.create(WeatherKitService::class.java),
+                    config = WeatherKitConfig(
+                        keyID = BuildConfig.WEATHERKIT_KEY_ID,
+                        teamID = BuildConfig.WEATHERKIT_TEAM_ID,
+                        serviceID = BuildConfig.WEATHERKIT_SERVICE_ID,
+                        //keys = KeyPairGenerator.getInstance("EC").also { it.initialize(256) }.genKeyPair().let { it.public as (ECPublicKey) to it.private as (ECPrivateKey) },
+                        keys = BuildConfig.WEATHERKIT_PUBLIC_KEY to BuildConfig.WEATHERKIT_PRIVATE_KEY,
+                    )
                 )
             }
         }

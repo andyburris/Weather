@@ -18,6 +18,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "MAPS_API_KEY", apikeyProperties["MAPS_API_KEY"])
         buildConfigField("String", "DARK_SKY_KEY", apikeyProperties["DARK_SKY_KEY"])
+        buildConfigField("String", "WEATHERKIT_KEY_ID", apikeyProperties["WEATHERKIT_KEY_ID"])
+        buildConfigField("String", "WEATHERKIT_TEAM_ID", apikeyProperties["WEATHERKIT_TEAM_ID"])
+        buildConfigField("String", "WEATHERKIT_SERVICE_ID", apikeyProperties["WEATHERKIT_SERVICE_ID"])
+        buildConfigField("String", "WEATHERKIT_PRIVATE_KEY", apikeyProperties["WEATHERKIT_PRIVATE_KEY"])
+        buildConfigField("String", "WEATHERKIT_PUBLIC_KEY", apikeyProperties["WEATHERKIT_PUBLIC_KEY"])
     }
     buildTypes {
         release {
