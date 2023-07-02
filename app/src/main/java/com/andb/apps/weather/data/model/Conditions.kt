@@ -3,7 +3,11 @@ package com.andb.apps.weather.data.model
 import com.andb.apps.weather.util.secondsToLocalDateTime
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
-import java.time.*
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 data class Conditions(
     val current: CurrentConditions,
@@ -32,7 +36,6 @@ data class DailyConditions(
     val cloudCover: Double,
     val uvIndex: Int,
     val visibility: Double,
-    val ozone: Double
 )
 
 data class HourlyConditions(
@@ -44,7 +47,6 @@ data class HourlyConditions(
     val precipType: PrecipitationType,
     val temperature: Double,
     val apparentTemperature: Double,
-    val dewPoint: Double,
     val humidity: Double,
     val pressure: Double,
     val windSpeed: Double,
@@ -52,12 +54,12 @@ data class HourlyConditions(
     val windDirection: Int,
     val cloudCover: Double,
     val uvIndex: Int,
-    val visibility: Double,
-    val ozone: Double
+    val visibility: Double
 )
 
 data class MinutelyConditions(
     val time: ZonedDateTime,
+    val precipChance: Double,
     val precipIntensity: Double,
     val precipType: PrecipitationType
 )
@@ -76,8 +78,7 @@ data class CurrentConditions(
     val windDirection: Int,
     val cloudCover: Double,
     val uvIndex: Int,
-    val visibility: Double,
-    val ozone: Double
+    val visibility: Double
 )
 
 

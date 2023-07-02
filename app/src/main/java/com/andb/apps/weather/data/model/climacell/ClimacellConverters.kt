@@ -1,7 +1,16 @@
 package com.andb.apps.weather.data.model.climacell
 
 import com.andb.apps.weather.data.local.Prefs
-import com.andb.apps.weather.data.model.*
+import com.andb.apps.weather.data.model.ConditionCode
+import com.andb.apps.weather.data.model.Conditions
+import com.andb.apps.weather.data.model.CurrentConditions
+import com.andb.apps.weather.data.model.DailyConditions
+import com.andb.apps.weather.data.model.DayItem
+import com.andb.apps.weather.data.model.HourlyConditions
+import com.andb.apps.weather.data.model.Minutely
+import com.andb.apps.weather.data.model.MinutelyConditions
+import com.andb.apps.weather.data.model.MoonPhase
+import com.andb.apps.weather.data.model.PrecipitationType
 
 fun ClimacellRequest.toConditions(): Conditions {
     return Conditions(
@@ -37,14 +46,15 @@ fun ClimacellConditions.toCurrentConditions(): CurrentConditions {
         cloudCover.value.toDouble(),
         -1,
         visibility.value,
-        ozone.value?.toDouble() ?: 0.0
     )
 }
 
 fun ClimacellConditions.toMinutelyConditions(): MinutelyConditions {
+    val precipAmount = precipitation.value ?: 0.0
     return MinutelyConditions(
         observationTime.value,
-        precipitation.value ?: 0.0,
+        if (precipAmount > 0.01) 1.0 else 0.0,
+        precipAmount,
         precipitationType.value.toPrecipitationType()
     )
 }
@@ -59,7 +69,6 @@ fun ClimacellHourlyForecast.toHourlyConditions(): HourlyConditions {
         precipitationType.value.toPrecipitationType(),
         temp.value,
         feelsLike.value,
-        -1.0,
         humidity.value / 100,
         baroPressure.value,
         windSpeed.value,
@@ -68,7 +77,6 @@ fun ClimacellHourlyForecast.toHourlyConditions(): HourlyConditions {
         cloudCover.value.toDouble(),
         -1,
         visibility.value,
-        ozone.value?.toDouble() ?: 0.0
     )
 }
 
@@ -94,7 +102,6 @@ fun ClimacellDailyForecast.toDailyConditions(): DailyConditions {
         -1.0,
         -1,
         visibility.average(),
-        -1.0
     )
 }
 
@@ -188,10 +195,10 @@ private fun String.toMoonPhase(): MoonPhase {
 
 private fun String?.toPrecipitationType(): PrecipitationType {
     return when (this) {
-        "rain" -> PrecipitationType.RAIN
-        "snow" -> PrecipitationType.SNOW
-        "freezing_rain" -> PrecipitationType.SLEET
-        "ice_pellets" -> PrecipitationType.HAIL
-        else -> PrecipitationType.NONE
+        "rain" -> PrecipitationType.Rain
+        "snow" -> PrecipitationType.Snow
+        "freezing_rain" -> PrecipitationType.Sleet
+        "ice_pellets" -> PrecipitationType.Hail
+        else -> PrecipitationType.None
     }
 }

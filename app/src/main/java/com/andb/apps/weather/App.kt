@@ -17,7 +17,6 @@ import com.andb.apps.weather.data.model.climacell.ClimacellOzoneAdapter
 import com.andb.apps.weather.data.model.climacell.ClimacellWindDirectionAdapter
 import com.andb.apps.weather.data.model.climacell.LocalDateAdapter
 import com.andb.apps.weather.data.model.climacell.ZonedDateTimeAdapter
-import com.andb.apps.weather.data.model.darksky.ZoneOffsetAdapter
 import com.andb.apps.weather.data.remote.WeatherKitService
 import com.andb.apps.weather.data.repository.location.LocationRepo
 import com.andb.apps.weather.data.repository.location.LocationRepoImpl
@@ -62,7 +61,6 @@ class App : Application() {
 
         single {
             Moshi.Builder()
-                .add(ZoneOffsetAdapter())
                 .add(LocalDateTimeAdapter())
                 .add(LocalDateAdapter())
                 .add(ZonedDateTimeAdapter())
@@ -80,13 +78,6 @@ class App : Application() {
                 .build()
         }
 
-        single(named("darkSkyRetrofit")) {
-            Retrofit.Builder()
-                .client(get())
-                .baseUrl("https://api.darksky.net/")
-                .addConverterFactory(MoshiConverterFactory.create(get()))
-                .build()
-        }
         single(named("weatherKitRetrofit")) {
             Retrofit.Builder()
                 .client(get())
@@ -110,21 +101,15 @@ class App : Application() {
             if (DEBUG_OFFLINE) {
                 MockProviderRepo(get())
             } else {
-                val darkSkyRetrofit: Retrofit = get(named("darkSkyRetrofit"))
                 val weatherKitRetrofit: Retrofit = get(named("weatherKitRetrofit"))
                 val settings: WeatherSettings = get()
-                /*                DarkSkyRepo(
-                                    darkSkyService = darkSkyRetrofit.create(DarkSkyService::class.java),
-                                    apiKey = BuildConfig.DARK_SKY_KEY
-                                )*/
                 WeatherKitRepo(
                     weatherKitService = weatherKitRetrofit.create(WeatherKitService::class.java),
                     config = WeatherKitConfig(
                         keyID = BuildConfig.WEATHERKIT_KEY_ID,
                         teamID = BuildConfig.WEATHERKIT_TEAM_ID,
                         serviceID = BuildConfig.WEATHERKIT_SERVICE_ID,
-                        //keys = KeyPairGenerator.getInstance("EC").also { it.initialize(256) }.genKeyPair().let { it.public as (ECPublicKey) to it.private as (ECPrivateKey) },
-                        keys = BuildConfig.WEATHERKIT_PUBLIC_KEY to BuildConfig.WEATHERKIT_PRIVATE_KEY,
+                        privateKey = BuildConfig.WEATHERKIT_PRIVATE_KEY,
                     )
                 )
             }

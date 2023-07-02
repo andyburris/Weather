@@ -8,6 +8,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.*
+import androidx.core.view.WindowCompat
 import com.andb.apps.weather.data.local.LocalSettings
 import com.andb.apps.weather.data.local.WeatherSettings
 import com.andb.apps.weather.data.repository.location.LocationRepo
@@ -29,6 +30,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         val weatherSettings: WeatherSettings = get()
         val locationRepo: LocationRepo = get()
         val weatherRepo: WeatherRepo = get()

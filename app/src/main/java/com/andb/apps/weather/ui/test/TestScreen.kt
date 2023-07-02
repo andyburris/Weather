@@ -1,7 +1,6 @@
 package com.andb.apps.weather.ui.test
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -94,13 +93,13 @@ fun ConditionChips(
             Chip(
                 label = "Day",
                 selected = daytime,
-                modifier = Modifier.clickable { onSelectDaytime.invoke(true) })
+                onClick = { onSelectDaytime.invoke(true) })
         }
         item {
             Chip(
                 label = "Night",
                 selected = !daytime,
-                modifier = Modifier.clickable { onSelectDaytime.invoke(false) })
+                onClick = { onSelectDaytime.invoke(false) })
         }
         item { Divider(Modifier.height(32.dp)) }
         items(ConditionCode.values()) { conditionCode ->
@@ -109,7 +108,7 @@ fun ConditionChips(
                 label = conditionCode.toString().lowercase().capitalize(Locale.current)
                     .filter { it != '_' },
                 selected = isSelected,
-                modifier = Modifier.clickable { onSelectConditionCode.invoke(conditionCode) }
+                onClick = { onSelectConditionCode.invoke(conditionCode) }
             )
         }
         item { Divider(Modifier.height(32.dp)) }
@@ -117,13 +116,13 @@ fun ConditionChips(
             Chip(
                 label = "New",
                 selected = !legacyView,
-                modifier = Modifier.clickable { onSelectView.invoke(false) })
+                onClick = { onSelectView.invoke(false) })
         }
         item {
             Chip(
                 label = "Legacy",
                 selected = legacyView,
-                modifier = Modifier.clickable { onSelectView.invoke(true) })
+                onClick = { onSelectView.invoke(true) })
         }
     }
 }

@@ -2,7 +2,12 @@ package com.andb.apps.weather.ui.location
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -35,6 +40,7 @@ fun LocationItem(
                 is LocationState.WithLocation -> Modifier.clickable { onAction.invoke(location.toSelectLocationAction()) }
                 is LocationState.NoLocation -> Modifier
             })
+            .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = when (location) {

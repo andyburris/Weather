@@ -1,5 +1,6 @@
 package com.andb.apps.weather.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -109,9 +110,7 @@ private fun WithLocation(
     val (selectedView, onSelectView) = remember { mutableStateOf(HomeView.Summary) }
     BoxWithConstraints(modifier = modifier) {
         val (isLocationPickerOpen, setLocationPickerOpen) = remember(locationState) {
-            mutableStateOf(
-                false
-            )
+            mutableStateOf(false)
         }
 
         WeatherBackground(
@@ -146,6 +145,7 @@ private fun WithLocation(
         }
 
         if (isLocationPickerOpen) {
+            BackHandler { setLocationPickerOpen(false) }
             Column(
                 modifier = Modifier
                     .background(MaterialTheme.colors.onBackgroundTertiary)

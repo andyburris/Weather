@@ -1,7 +1,11 @@
 package com.andb.apps.weather.ui.location
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -24,12 +28,22 @@ fun LocationPicker(
     onAction: (Machine.Action) -> Unit,
 ) {
     val searchTerm = remember { mutableStateOf("") }
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier
+            .padding(
+                bottom = WindowInsets.ime
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+            )
+            .then(if (searchTerm.value.isEmpty()) Modifier else Modifier.fillMaxHeight())
+    ) {
         SearchBar(
             term = searchTerm.value,
             placeholder = "Search locations...",
             onTermChange = { searchTerm.value = it },
-            modifier = Modifier.padding(24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp)
         )
         Divider(Modifier.fillMaxWidth(), color = MaterialTheme.colors.onBackgroundDivider)
         when {
@@ -39,6 +53,10 @@ fun LocationPicker(
                 modifier = Modifier.padding(vertical = 12.dp),
                 onAction = onAction
             )
+
+            else -> SearchLocation(searchTerm = searchTerm.value) {
+                TODO()
+            }
         }
     }
 }
@@ -61,7 +79,10 @@ private fun SavedLocations(
         )
         LocationItem(location = currentLocation, onAction = onAction)
         savedLocations.forEach { location ->
-            LocationItem(location = location, onAction = onAction)
+            LocationItem(
+                location = location,
+                onAction = onAction,
+            )
         }
     }
 }
@@ -70,7 +91,11 @@ private fun SavedLocations(
 private fun SearchLocation(
     searchTerm: String,
     modifier: Modifier = Modifier,
-    onAction: (Machine.Action) -> Unit,
+    onAction: (Machine.Action.SelectLocation) -> Unit,
 ) {
+    Column(
+        modifier = modifier,
+    ) {
 
+    }
 }

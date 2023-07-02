@@ -6,7 +6,11 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.view.OrientationEventListener
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.afollestad.materialdialogs.utils.MDUtil.isLandscape
 import kotlin.math.acos
 import kotlin.math.pow
@@ -18,16 +22,20 @@ internal data class RotationState(val rotation2D: Float, val rotation3D: Float)
 internal fun Context.getRotationState(): State<RotationState> {
     val (forceX, forceY, forceZ) = remember { getGravity() }.value
     val orientation = remember { getOrientation() }.value
-    return derivedStateOf {
-        calculateRotation(forceX, forceY, forceZ, orientation)
+    return remember(forceX, forceY, forceZ, orientation) {
+        derivedStateOf {
+            calculateRotation(forceX, forceY, forceZ, orientation)
+        }
     }
 }
 
 private fun Context.getGravity(): State<Triple<Float, Float, Float>> {
     val rotationState = mutableStateOf(Triple(0f, 0f, 0f))
     val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    val gravitySensor: Sensor = sensorManager
-        .getDefaultSensor(Sensor.TYPE_GRAVITY)
+    val gravitySensor: Sensor =
+        sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) ?: return mutableStateOf(
+            Triple(0f, 0f, 0f)
+        )
     val gravityListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
             val (forceX, forceY, forceZ) = event.values

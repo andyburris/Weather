@@ -10,140 +10,176 @@ import com.andb.apps.weather.data.model.Minutely
 import com.andb.apps.weather.data.model.MinutelyConditions
 import com.andb.apps.weather.data.model.MoonPhase
 import com.andb.apps.weather.data.model.PrecipitationType
-import java.time.ZoneOffset
+import com.andb.apps.weather.data.toFahrenheit
+import java.time.ZonedDateTime
 
 fun WeatherKitRequest.toConditions(): Conditions {
+    val allHourlyConditions = this.forecastHourly.hours.map { it.toHourlyConditions() }
     return Conditions(
-        currently.toCurrentConditions(timezone),
-        minutely.toMinutely(timezone),
-        daily.data.map { day ->
+        currentWeather.toCurrentConditions(),
+        forecastNextHour.toMinutely(),
+        forecastDaily.days.map { day ->
+            val dayOfMonth = ZonedDateTime.parse(day.forecastStart).toLocalDate().dayOfMonth
             DayItem(
-                day = day.toDailyConditions(timezone),
-                hourly = hourly.data
-                    .filter { it.time.dayOfMonth == day.time.dayOfMonth }
-                    .map { it.toHourlyConditions(timezone) }
+                day = day.toDailyConditions(allHourlyConditions.filter { it.time.dayOfMonth == dayOfMonth }),
+                hourly = allHourlyConditions.filter { it.time.dayOfMonth == dayOfMonth }
             )
         }
     )
 }
 
-fun WeatherKitCurrentConditions.toCurrentConditions(timeZone: ZoneOffset): CurrentConditions {
+fun WeatherKitCurrentConditions.toCurrentConditions(): CurrentConditions {
     return CurrentConditions(
-        time.atOffset(timeZone).toZonedDateTime(),
-        summary,
-        icon.toWeatherIcon(),
-        precipProbability * 100,
-        temperature,
-        apparentTemperature,
+        ZonedDateTime.parse(asOf),
+        "",
+        conditionCode.toWeatherIcon(),
+        precipitationIntensity,
+        temperature.toFahrenheit(),
+        temperatureApparent.toFahrenheit(),
         humidity,
         pressure,
         windSpeed,
         windGust,
-        windBearing + 180,
+        windDirection,
         cloudCover,
         uvIndex,
         visibility,
-        ozone
     )
 }
 
-fun WeatherKitMinutely.toMinutely(timeZone: ZoneOffset): Minutely {
-    return Minutely(summary, data.map { it.toMinutelyConditions(timeZone) })
+fun WeatherKitNextHour.toMinutely(): Minutely {
+    return Minutely(
+        generateSummary(),
+        minutes.map { it.toMinutelyConditions(summary.first().condition) })
 }
 
-fun WeatherKitMinutelyConditions.toMinutelyConditions(timeZone: ZoneOffset): MinutelyConditions {
+private val precipIntensityThreshold = 0.01
+fun WeatherKitNextHour.generateSummary(): String {
+    val conditionName = summary.first().condition.name.capitalize()
+    val precipStart = minutes.indexOfFirst { it.precipitationIntensity > precipIntensityThreshold }
+    if (precipStart < 1) return "$conditionName for the next hour"
+    val precipEnd = minutes.drop(precipStart)
+        .indexOfFirst { it.precipitationIntensity <= precipIntensityThreshold }
+    if (precipEnd == -1) return "$conditionName starting in $precipStart minutes"
+    return "$conditionName starting in $precipStart minutes, ending $precipEnd minutes later"
+}
+
+fun WeatherKitMinuteConditions.toMinutelyConditions(precipitationType: WeatherKitPrecipitationType): MinutelyConditions {
     return MinutelyConditions(
-        time.atOffset(timeZone).toZonedDateTime(),
-        precipIntensity,
-        precipType.toPrecipitationType()
+        ZonedDateTime.parse(startTime),
+        precipitationChance,
+        precipitationIntensity,
+        precipitationType.toPrecipitationType()
     )
 }
 
-fun WeatherKitHourlyConditions.toHourlyConditions(timeZone: ZoneOffset): HourlyConditions {
+fun WeatherKitHourlyConditions.toHourlyConditions(): HourlyConditions {
     return HourlyConditions(
-        time.atOffset(timeZone).toZonedDateTime(),
-        summary,
-        icon.toWeatherIcon(),
-        precipIntensity,
-        precipProbability,
-        precipType.toPrecipitationType(),
-        temperature,
-        apparentTemperature,
-        dewPoint,
+        ZonedDateTime.parse(forecastStart),
+        "",
+        conditionCode.toWeatherIcon(),
+        precipitationIntensity,
+        precipitationChance,
+        precipitationType.toPrecipitationType(),
+        temperature.toFahrenheit(),
+        temperatureApparent.toFahrenheit(),
         humidity,
         pressure,
         windSpeed,
         windGust,
-        windBearing + 180,
+        windDirection,
         cloudCover,
         uvIndex,
         visibility,
-        ozone
     )
 }
 
-fun WeatherKitDailyConditions.toDailyConditions(timeZone: ZoneOffset): DailyConditions {
+fun WeatherKitDailyConditions.toDailyConditions(hours: List<HourlyConditions>): DailyConditions {
     return DailyConditions(
-        time.atOffset(timeZone).toLocalDate(),
-        summary,
-        icon.toWeatherIcon(),
-        sunriseTime.atOffset(timeZone).toZonedDateTime(),
-        sunsetTime.atOffset(timeZone).toZonedDateTime(),
+        ZonedDateTime.parse(forecastStart).toLocalDate(),
+        "",
+        conditionCode.toWeatherIcon(),
+        ZonedDateTime.parse(sunrise),
+        ZonedDateTime.parse(sunset),
         moonPhase.toMoonPhase(),
-        precipIntensity,
-        precipIntensityMax,
-        precipProbability,
-        precipType.toPrecipitationType(),
-        temperatureHigh,
-        temperatureLow,
-        apparentTemperatureHigh,
-        apparentTemperatureLow,
-        humidity,
-        pressure,
-        windSpeed,
-        cloudCover,
-        uvIndex,
-        visibility,
-        ozone
+        precipitationAmount,
+        precipIntensityMax = hours.maxOf { it.precipIntensity },
+        precipitationChance,
+        precipitationType.toPrecipitationType(),
+        temperatureMax.toFahrenheit(),
+        temperatureMin.toFahrenheit(),
+        hours.maxOf { it.apparentTemperature }.toFahrenheit(),
+        hours.minOf { it.apparentTemperature }.toFahrenheit(),
+        humidity = hours.maxOf { it.humidity },
+        pressure = hours.maxOf { it.pressure },
+        windSpeed = hours.maxOf { it.windSpeed },
+        cloudCover = hours.maxOf { it.cloudCover },
+        uvIndex = hours.maxOf { it.uvIndex },
+        visibility = hours.maxOf { it.visibility },
     )
 }
 
-private fun String.toWeatherIcon(): ConditionCode {
+private fun WeatherKitConditionCode.toWeatherIcon(): ConditionCode = when (this) {
+    WeatherKitConditionCode.Clear -> ConditionCode.CLEAR
+    WeatherKitConditionCode.Cloudy -> ConditionCode.CLOUDY
+    WeatherKitConditionCode.Dust -> ConditionCode.FOG
+    WeatherKitConditionCode.Fog -> ConditionCode.FOG
+    WeatherKitConditionCode.Haze -> ConditionCode.FOG
+    WeatherKitConditionCode.MostlyClear -> ConditionCode.PARTLY_CLOUDY
+    WeatherKitConditionCode.MostlyCloudy -> ConditionCode.PARTLY_CLOUDY
+    WeatherKitConditionCode.PartlyCloudy -> ConditionCode.PARTLY_CLOUDY
+    WeatherKitConditionCode.ScatteredThunderstorms -> ConditionCode.THUNDERSTORM
+    WeatherKitConditionCode.Smoke -> ConditionCode.FOG
+    WeatherKitConditionCode.Breezy -> ConditionCode.WIND
+    WeatherKitConditionCode.Windy -> ConditionCode.WIND
+    WeatherKitConditionCode.Drizzle -> ConditionCode.RAIN
+    WeatherKitConditionCode.HeavyRain -> ConditionCode.RAIN
+    WeatherKitConditionCode.Rain -> ConditionCode.RAIN
+    WeatherKitConditionCode.Showers -> ConditionCode.RAIN
+    WeatherKitConditionCode.Flurries -> ConditionCode.SNOW
+    WeatherKitConditionCode.HeavySnow -> ConditionCode.SNOW
+    WeatherKitConditionCode.MixedRainAndSleet -> ConditionCode.SLEET
+    WeatherKitConditionCode.MixedRainAndSnow -> ConditionCode.SLEET
+    WeatherKitConditionCode.MixedRainfall -> ConditionCode.SLEET
+    WeatherKitConditionCode.MixedSnowAndSleet -> ConditionCode.SLEET
+    WeatherKitConditionCode.ScatteredShowers -> ConditionCode.RAIN
+    WeatherKitConditionCode.ScatteredSnowShowers -> ConditionCode.SNOW
+    WeatherKitConditionCode.Sleet -> ConditionCode.SLEET
+    WeatherKitConditionCode.Snow -> ConditionCode.SNOW
+    WeatherKitConditionCode.SnowShowers -> ConditionCode.SNOW
+    WeatherKitConditionCode.Blizzard -> ConditionCode.SNOW
+    WeatherKitConditionCode.BlowingSnow -> ConditionCode.SNOW
+    WeatherKitConditionCode.FreezingDrizzle -> ConditionCode.HAIL
+    WeatherKitConditionCode.FreezingRain -> ConditionCode.HAIL
+    WeatherKitConditionCode.Frigid -> ConditionCode.SNOW
+    WeatherKitConditionCode.Hail -> ConditionCode.HAIL
+    WeatherKitConditionCode.Hot -> ConditionCode.CLEAR
+    WeatherKitConditionCode.Hurricane -> ConditionCode.THUNDERSTORM
+    WeatherKitConditionCode.IsolatedThunderstorms -> ConditionCode.THUNDERSTORM
+    WeatherKitConditionCode.Thunderstorms -> ConditionCode.THUNDERSTORM
+    WeatherKitConditionCode.Tornado -> ConditionCode.WIND
+    WeatherKitConditionCode.TropicalStorm -> ConditionCode.THUNDERSTORM
+}
+
+private fun WeatherKitMoonPhase.toMoonPhase(): MoonPhase {
     return when (this) {
-        "clear-day" -> ConditionCode.CLEAR
-        "clear-night" -> ConditionCode.CLEAR
-        "rain" -> ConditionCode.RAIN
-        "snow" -> ConditionCode.SNOW
-        "sleet" -> ConditionCode.SLEET
-        "wind" -> ConditionCode.WIND
-        "fog" -> ConditionCode.FOG
-        "cloudy" -> ConditionCode.CLOUDY
-        "partly-cloudy-day" -> ConditionCode.PARTLY_CLOUDY
-        "partly-cloudy-night" -> ConditionCode.PARTLY_CLOUDY
-        "none" -> ConditionCode.NONE
-        else -> ConditionCode.NONE
+        WeatherKitMoonPhase.new -> MoonPhase.NEW_MOON
+        WeatherKitMoonPhase.firstQuarter -> MoonPhase.FIRST_QUARTER
+        WeatherKitMoonPhase.full -> MoonPhase.FULL
+        WeatherKitMoonPhase.thirdQuarter -> MoonPhase.THIRD_QUARTER
+        WeatherKitMoonPhase.waxingCrescent -> MoonPhase.WAXING_CRESCENT
+        WeatherKitMoonPhase.waxingGibbous -> MoonPhase.WAXING_GIBBOUS
+        WeatherKitMoonPhase.waningGibbous -> MoonPhase.WANING_GIBBOUS
+        WeatherKitMoonPhase.waningCrescent -> MoonPhase.WANING_CRESCENT
     }
 }
 
-private fun Double.toMoonPhase(): MoonPhase {
-    return when (this) {
-        0.0 -> MoonPhase.NEW_MOON
-        0.25 -> MoonPhase.FIRST_QUARTER
-        0.5 -> MoonPhase.FULL
-        0.75 -> MoonPhase.THIRD_QUARTER
-        in 0.0..0.25 -> MoonPhase.WAXING_CRESCENT
-        in 0.25..0.50 -> MoonPhase.WAXING_GIBBOUS
-        in 0.50..0.75 -> MoonPhase.WANING_GIBBOUS
-        in 0.75..1.00 -> MoonPhase.WANING_CRESCENT
-        else -> MoonPhase.NEW_MOON
-    }
-}
-
-private fun String?.toPrecipitationType(): PrecipitationType {
-    return when (this) {
-        "rain" -> PrecipitationType.RAIN
-        "snow" -> PrecipitationType.SNOW
-        "sleet" -> PrecipitationType.SLEET
-        else -> PrecipitationType.NONE
-    }
+private fun WeatherKitPrecipitationType.toPrecipitationType() = when (this) {
+    WeatherKitPrecipitationType.clear -> PrecipitationType.None
+    WeatherKitPrecipitationType.precipitation -> PrecipitationType.Unknown
+    WeatherKitPrecipitationType.rain -> PrecipitationType.Rain
+    WeatherKitPrecipitationType.snow -> PrecipitationType.Snow
+    WeatherKitPrecipitationType.sleet -> PrecipitationType.Sleet
+    WeatherKitPrecipitationType.hail -> PrecipitationType.Hail
+    WeatherKitPrecipitationType.mixed -> PrecipitationType.Mixed
 }

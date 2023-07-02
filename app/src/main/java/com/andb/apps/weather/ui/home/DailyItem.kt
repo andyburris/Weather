@@ -1,5 +1,6 @@
 package com.andb.apps.weather.ui.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
@@ -33,6 +36,7 @@ import com.andb.apps.weather.ui.theme.onBackgroundSecondary
 import com.andb.apps.weather.ui.theme.onBackgroundTertiary
 import com.andb.apps.weather.util.size
 import kotlinx.coroutines.flow.SharedFlow
+import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 data class GlobalRanges(
@@ -51,7 +55,6 @@ fun DailyItem(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -72,13 +75,24 @@ fun DailyItem(
                 modifier = Modifier.weight(1f)
             )
         }
-        HomeViewWidget(
-            selectedView = selectedView,
-            dayItem = dayItem,
-            globalRanges = globalRanges,
-            scrollDispatcher = scrollDispatcher,
-            onDispatchScroll = onDispatchScroll,
-        )
+        AnimatedVisibility(visible = selectedView != HomeView.Summary) {
+            Spacer(modifier = Modifier.height(16.dp))
+            HomeViewWidget(
+                selectedView = selectedView,
+                dayItem = dayItem,
+                globalRanges = globalRanges,
+                scrollDispatcher = scrollDispatcher,
+                onDispatchScroll = onDispatchScroll,
+            )
+            /*
+                        Spacer(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp)
+                                .background(MaterialTheme.colors.onBackgroundTertiary, MaterialTheme.shapes.medium)
+                                .height(60.dp)
+                            )
+            */
+        }
     }
 }
 
@@ -166,11 +180,15 @@ private fun HomeViewWidget(
                 state = lazyListState,
             ) {
                 items(dayItem.hourly) { hourlyConditions ->
+                    val inPast =
+                        (hourlyConditions.time.dayOfMonth <= LocalDateTime.now().dayOfMonth) && (hourlyConditions.time.hour < LocalDateTime.now().hour)
                     HourlyItem(
                         selectedView = selectedView,
                         hourlyConditions = hourlyConditions,
                         globalRanges = globalRanges,
-                        modifier = Modifier.height(60.dp)
+                        modifier = Modifier
+                            .height(60.dp)
+                            .graphicsLayer(alpha = if (inPast) 0.5f else 1.0f)
                     )
                 }
             }
