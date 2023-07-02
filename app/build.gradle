@@ -122,7 +122,6 @@ dependencies {
 
     implementation("io.ktor:ktor-server-auth:2.3.2")
     implementation("io.ktor:ktor-server-auth-jwt:2.3.2")
-    implementation("com.github.PhilJay:JWT:1.2.6")
 
     implementation("com.chibatching.kotpref:kotpref:2.10.0")//preferences library
     implementation("com.chibatching.kotpref:enum-support:2.10.0")
