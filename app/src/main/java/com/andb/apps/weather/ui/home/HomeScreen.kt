@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.LocationState
@@ -64,6 +65,7 @@ fun HomeScreen(state: HomeScreenState, onAction: (Machine.Action) -> Unit) {
                     onAction = onAction,
                     modifier = Modifier.padding(it)
                 )
+
                 is LocationState.NoLocation -> NoLocation(
                     locationPickerState = LocationPickerState(
                         currentLocation = state.currentLocation,
@@ -186,9 +188,10 @@ private fun LocationContent(
         val firstItemHeight = remember { mutableStateOf(0.dp) }
         val upperContentHeight =
             animateDpAsState(targetValue = this.minHeight - firstItemHeight.value - 12.dp)
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .fillMaxSize()
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -196,6 +199,9 @@ private fun LocationContent(
             UpperContent(
                 locationState = locationState,
                 conditionState = conditionState,
+                scrollAmount = with(LocalDensity.current) {
+                    scrollState.value.toDp().coerceAtMost(upperContentHeight.value - 128.dp)
+                },
                 modifier = Modifier.height(upperContentHeight.value),
                 onOpenLocationPicker = onOpenLocationPicker
             )
@@ -206,6 +212,5 @@ private fun LocationContent(
                 onAction = onAction
             )
         }
-
     }
 }

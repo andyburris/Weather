@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.ConditionState
 import com.andb.apps.weather.LocationState
@@ -30,6 +31,7 @@ import kotlin.math.roundToInt
 fun UpperContent(
     locationState: LocationState.WithLocation,
     conditionState: ConditionState,
+    scrollAmount: Dp,
     modifier: Modifier = Modifier,
     onOpenLocationPicker: () -> Unit,
 ) {
@@ -38,7 +40,9 @@ fun UpperContent(
     ) {
         LocationHeader(
             locationState = locationState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(top = scrollAmount)
+                .fillMaxWidth(),
             onClick = onOpenLocationPicker
         )
         Spacer(modifier = Modifier.weight(1f))

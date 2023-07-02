@@ -51,6 +51,7 @@ fun WeatherBackground(
             ConditionCode.THUNDERSTORM -> {
                 Clouds(rotationState = rotation, modifier = Modifier.fillMaxSize())
                 Precipitation(config = rainConfig, rotationState = rotation)
+                Precipitation(config = thunderstormConfig, rotationState = rotation)
             }
             ConditionCode.WIND -> Wind(rotationState = rotation, daytime = daytime)
         }
@@ -74,6 +75,15 @@ private val rainConfig = PrecipiationConfig(
     speeds = listOf(500, 750, 1000),
     baseAngleOffsetDeg = -10f,
     dampenRotation = 0.75f,
+)
+
+private val thunderstormConfig = PrecipiationConfig(
+    colors = WeatherColors.Overlay.Thunderstorm.values().map { it.color },
+    lengths = (12 until 48).step(4).toList(),
+    speeds = listOf(500, 750, 1000),
+    baseAngleOffsetDeg = -10f,
+    dampenRotation = 0.75f,
+    amountOfDroplets = 8,
 )
 
 private val snowConfig = PrecipiationConfig(

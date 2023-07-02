@@ -68,6 +68,10 @@ object WeatherColors {
             secondaryDroplet(Color(0x0DFFFFFF)),
         }
 
+        enum class Thunderstorm(val color: Color) {
+            primaryDroplet(Color(0xFAF2C94C)),
+        }
+
         enum class Snow(val color: Color) {
             primaryDroplet(Color(0xF0FFFFFF)),
             secondaryDroplet(Color(0x80FFFFFF)),
