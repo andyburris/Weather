@@ -129,4 +129,7 @@ dependencies {
     implementation("com.russhwolf:multiplatform-settings-coroutines:0.9")
     implementation("com.russhwolf:multiplatform-settings-datastore:0.9")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation("com.patrykandpatrick.vico:core:1.6.5")
+    implementation("com.patrykandpatrick.vico:compose:1.6.5")
 }

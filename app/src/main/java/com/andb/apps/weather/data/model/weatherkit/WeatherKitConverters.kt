@@ -11,6 +11,7 @@ import com.andb.apps.weather.data.model.MinutelyConditions
 import com.andb.apps.weather.data.model.MoonPhase
 import com.andb.apps.weather.data.model.PrecipitationType
 import com.andb.apps.weather.data.toFahrenheit
+import com.andb.apps.weather.data.toMph
 import java.time.ZonedDateTime
 
 fun WeatherKitRequest.toConditions(): Conditions {
@@ -38,8 +39,8 @@ fun WeatherKitCurrentConditions.toCurrentConditions(): CurrentConditions {
         temperatureApparent.toFahrenheit(),
         humidity,
         pressure,
-        windSpeed,
-        windGust,
+        windSpeed.toMph(),
+        windGust.toMph(),
         windDirection,
         cloudCover,
         uvIndex,
@@ -53,15 +54,25 @@ fun WeatherKitNextHour.toMinutely(): Minutely {
         minutes.map { it.toMinutelyConditions(summary.first().condition) })
 }
 
-private val precipIntensityThreshold = 0.01
+private val precipIntensityThreshold = 0.1
 fun WeatherKitNextHour.generateSummary(): String {
-    val conditionName = summary.first().condition.name.capitalize()
-    val precipStart = minutes.indexOfFirst { it.precipitationIntensity > precipIntensityThreshold }
-    if (precipStart < 1) return "$conditionName for the next hour"
-    val precipEnd = minutes.drop(precipStart)
-        .indexOfFirst { it.precipitationIntensity <= precipIntensityThreshold }
-    if (precipEnd == -1) return "$conditionName starting in $precipStart minutes"
-    return "$conditionName starting in $precipStart minutes, ending $precipEnd minutes later"
+    println("generating next hour summary, summary = ${this.summary}")
+
+    return when {
+        summary.isEmpty() -> throw Error("Summary should always have a value")
+        summary.size == 1 -> "${summary.first().condition.name.capitalize()} for the next hour"
+        summary.size == 2 -> "${summary[0].condition.name.capitalize()} for ${
+            ZonedDateTime.parse(
+                summary[1].startTime
+            ).minute - ZonedDateTime.now().minute
+        } minutes, then ${summary[1].condition.name} for the rest of the hour"
+
+        else -> "${summary[0].condition.name.capitalize()} for ${ZonedDateTime.parse(summary[1].startTime).minute - ZonedDateTime.now().minute} minutes, then ${summary[1].condition.name} for ${
+            ZonedDateTime.parse(
+                summary[2].startTime
+            ).minute - ZonedDateTime.parse(summary[1].startTime).minute
+        } minutes"
+    }
 }
 
 fun WeatherKitMinuteConditions.toMinutelyConditions(precipitationType: WeatherKitPrecipitationType): MinutelyConditions {
@@ -85,8 +96,8 @@ fun WeatherKitHourlyConditions.toHourlyConditions(): HourlyConditions {
         temperatureApparent.toFahrenheit(),
         humidity,
         pressure,
-        windSpeed,
-        windGust,
+        windSpeed.toMph(),
+        windGust.toMph(),
         windDirection,
         cloudCover,
         uvIndex,
@@ -112,7 +123,7 @@ fun WeatherKitDailyConditions.toDailyConditions(hours: List<HourlyConditions>): 
         hours.minOf { it.apparentTemperature }.toFahrenheit(),
         humidity = hours.maxOf { it.humidity },
         pressure = hours.maxOf { it.pressure },
-        windSpeed = hours.maxOf { it.windSpeed },
+        windSpeed = hours.maxOf { it.windSpeed.toMph() },
         cloudCover = hours.maxOf { it.cloudCover },
         uvIndex = hours.maxOf { it.uvIndex },
         visibility = hours.maxOf { it.visibility },

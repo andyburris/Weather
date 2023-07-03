@@ -11,7 +11,7 @@ interface LocationRepo {
     fun savedLocations(): Flow<List<LocationState.Fixed>>
     suspend fun getSuggestionsFromSearch(term: String): List<AutocompletePrediction>
 
-    suspend fun getLocationByID(id: String): Result<LocationState.Fixed?>
+    suspend fun getLocationByID(id: String): Result<LocationState.Fixed>
     suspend fun saveLocation(location: LocationState.Fixed)
     suspend fun deleteLocation(location: LocationState.Fixed)
 }

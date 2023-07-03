@@ -8,15 +8,23 @@ import com.andb.apps.weather.data.model.SelectedLocation
 import com.andb.apps.weather.data.repository.location.LocationRepo
 import com.andb.apps.weather.data.repository.weather.WeatherRepo
 import com.andb.apps.weather.ui.home.HomeScreenState
+import com.andb.apps.weather.ui.location.LocationPickerState
+import com.andb.apps.weather.ui.location.LocationSearchState
+import com.andb.apps.weather.util.combine6
 import com.google.android.gms.tasks.RuntimeExecutionException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 data class Machine(
     private val weatherRepo: WeatherRepo,
@@ -25,11 +33,96 @@ data class Machine(
     private val coroutineScope: CoroutineScope,
     private val onRequestLocationPermission: () -> Unit
 ) {
-
     init {
         coroutineScope.launch {
             currentLocation.value = locationRepo.getCurrentLocation().toCurrentLocationState()
         }
+    }
+
+    private val savedLocations =
+        locationRepo.savedLocations().stateIn(coroutineScope, SharingStarted.Eagerly, listOf())
+    private val currentLocation =
+        MutableStateFlow<LocationState.Current>(LocationState.Current.NotLoaded)
+    private val selectedLocation = MutableStateFlow<SelectedLocation>(SelectedLocation.Current)
+    private val location = combine(
+        selectedLocation,
+        currentLocation,
+        savedLocations,
+    ) { selectedLocation, currentLocation, savedLocations ->
+        val newSelectedLocation = when (selectedLocation) {
+            is SelectedLocation.Fixed -> when (val foundLocation =
+                savedLocations.find { it.id == selectedLocation.id }) {
+                null -> currentLocation
+                else -> foundLocation
+            }
+
+            SelectedLocation.Current -> currentLocation
+        }
+        if (newSelectedLocation is LocationState.WithLocation) this.handleAction(Action.UpdateWeather)
+        return@combine newSelectedLocation
+    }.stateIn(coroutineScope, SharingStarted.Eagerly, LocationState.Current.NotLoaded)
+
+    private val searchTerm = MutableStateFlow("")
+    private val searchResults = searchTerm.debounce(300.milliseconds).map { term ->
+        if (term.isBlank()) return@map listOf()
+        val autocompleteResults = locationRepo.getSuggestionsFromSearch(term)
+        val jobs = autocompleteResults.map {
+            CoroutineScope(Dispatchers.IO).async {
+                locationRepo.getLocationByID(it.placeId).getOrNull()
+            }
+        }
+        val results = jobs.mapNotNull { it.await() }
+        results
+    }.stateIn(coroutineScope, SharingStarted.Eagerly, listOf())
+
+    private val conditions = MutableStateFlow<ConditionState>(ConditionState.NotLoaded)
+
+    val homeScreenState: StateFlow<HomeScreenState> = combine6(
+        location,
+        conditions,
+        currentLocation,
+        savedLocations,
+        searchTerm,
+        searchResults,
+    ) { locationState, conditionState, currentLocation, savedLocations, searchTerm, searchResults ->
+        println("zipping locationState = $locationState, conditionState = $conditionState")
+        HomeScreenState(
+            selectedLocation = locationState,
+            locationPickerState = LocationPickerState(
+                currentLocation = currentLocation,
+                savedLocations = savedLocations,
+                searchState = LocationSearchState(
+                    searchTerm,
+                    searchResults,
+                )
+            ),
+            conditionState = conditionState,
+        )
+    }.stateIn(
+        coroutineScope,
+        SharingStarted.Eagerly,
+        HomeScreenState(
+            selectedLocation = LocationState.Current.NotLoaded,
+            locationPickerState = LocationPickerState(
+                LocationState.Current.NotLoaded,
+                emptyList(),
+                LocationSearchState("", listOf()),
+            ),
+            conditionState = ConditionState.NotLoaded,
+        )
+    )
+
+    private val selectedScreen: MutableStateFlow<Screen> = MutableStateFlow(Screen.Home)
+    val currentScreenState: StateFlow<ScreenState> =
+        selectedScreen.combine(homeScreenState) { screen, homeScreenState ->
+            when (screen) {
+                Screen.Home -> homeScreenState
+                else -> SettingsState
+            }
+        }.stateIn(coroutineScope, SharingStarted.Eagerly, homeScreenState.value)
+
+    fun handleAction(action: Action) {
+        coroutineScope.launch { action.action.invoke(this@Machine) }
     }
 
     sealed class Action(open val action: suspend Machine.() -> Unit) {
@@ -47,6 +140,21 @@ data class Machine(
             }
         })
 
+        data class SearchLocation(val term: String) : Action({
+            println("updating search term to $term")
+            searchTerm.value = term
+        })
+
+        data class DeleteSavedLocation(val location: LocationState.Fixed) : Action({
+            val currentlySelected = selectedLocation.value
+            if (currentlySelected is SelectedLocation.Fixed && currentlySelected.id == location.id) {
+                selectedLocation.value = SelectedLocation.Current
+            }
+            CoroutineScope(Dispatchers.IO).launch {
+                locationRepo.deleteLocation(location)
+            }
+        })
+
         sealed class SelectLocation(override val action: suspend Machine.() -> Unit) :
             Action(action) {
             object Current : SelectLocation({
@@ -54,8 +162,17 @@ data class Machine(
             })
 
             data class Fixed(val locationID: String) : SelectLocation({
-                this.selectedLocation.value = SelectedLocation.Fixed(locationID)
-                    ?: SelectedLocation.Current //TODO: work on double refresh that happens on delete
+                CoroutineScope(Dispatchers.IO).launch {
+                    if (savedLocations.value.none { it.id == locationID }) {
+                        val foundLocation = locationRepo.getLocationByID(locationID).getOrNull()
+                            ?: throw Error("location should always be found")
+                        locationRepo.saveLocation(foundLocation)
+                    }
+                    selectedLocation.value = SelectedLocation.Fixed(locationID)
+                        ?: SelectedLocation.Current //TODO: work on double refresh that happens on delete
+
+                    searchTerm.value = ""
+                }
             })
         }
 
@@ -76,66 +193,6 @@ data class Machine(
             })
         }
     }
-
-    fun handleAction(action: Action) {
-        coroutineScope.launch { action.action.invoke(this@Machine) }
-    }
-
-    private val savedLocations = locationRepo.savedLocations()
-    private val currentLocation =
-        MutableStateFlow<LocationState.Current>(LocationState.Current.NotLoaded)
-
-    private val selectedLocation = MutableStateFlow<SelectedLocation>(SelectedLocation.Current)
-    private val location = combine(
-        selectedLocation,
-        currentLocation,
-        savedLocations
-    ) { selectedLocation, currentLocation, savedLocations ->
-        val newSelectedLocation = when (selectedLocation) {
-            is SelectedLocation.Fixed -> when (val foundLocation =
-                savedLocations.find { it.id == selectedLocation.id }) {
-                null -> currentLocation
-                else -> foundLocation
-            }
-            SelectedLocation.Current -> currentLocation
-        }
-        if (newSelectedLocation is LocationState.WithLocation) this.handleAction(Action.UpdateWeather)
-        return@combine newSelectedLocation
-    }.stateIn(coroutineScope, SharingStarted.Eagerly, LocationState.Current.NotLoaded)
-
-    private val conditions = MutableStateFlow<ConditionState>(ConditionState.NotLoaded)
-    val homeScreenState: StateFlow<HomeScreenState> = combine(
-        location,
-        conditions,
-        currentLocation,
-        savedLocations
-    ) { locationState, conditionState, currentLocation, savedLocations ->
-        println("zipping locationState = $locationState, conditionState = $conditionState")
-        HomeScreenState(
-            selectedLocation = locationState,
-            conditionState = conditionState,
-            currentLocation = currentLocation,
-            savedLocations = savedLocations,
-        )
-    }.stateIn(
-        coroutineScope,
-        SharingStarted.Eagerly,
-        HomeScreenState(
-            LocationState.Current.NotLoaded,
-            LocationState.Current.NotLoaded,
-            emptyList(),
-            ConditionState.NotLoaded
-        )
-    )
-
-    private val selectedScreen: MutableStateFlow<Screen> = MutableStateFlow(Screen.Home)
-    val currentScreenState: StateFlow<ScreenState> =
-        selectedScreen.combine(homeScreenState) { screen, homeScreenState ->
-            when (screen) {
-                Screen.Home -> homeScreenState
-                else -> SettingsState
-            }
-        }.stateIn(coroutineScope, SharingStarted.Eagerly, homeScreenState.value)
 }
 
 sealed interface LocationState {

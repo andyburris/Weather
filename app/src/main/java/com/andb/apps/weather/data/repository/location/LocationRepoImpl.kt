@@ -56,7 +56,7 @@ class LocationRepoImpl(
             .getOrNull() ?: emptyList()
     }
 
-    override suspend fun getLocationByID(id: String): Result<LocationState.Fixed?> =
+    override suspend fun getLocationByID(id: String): Result<LocationState.Fixed> =
         placesClient.getPlaceByID(
             id,
             listOf(
@@ -65,8 +65,8 @@ class LocationRepoImpl(
                 Place.Field.LAT_LNG,
                 Place.Field.ADDRESS_COMPONENTS
             )
-        ).map { placeResponse ->
-            val place = placeResponse?.place ?: return@map null
+        ).mapCatching { placeResponse ->
+            val place = placeResponse?.place ?: throw IllegalStateException("Place not found")
             val addressComponents = place.addressComponents!!.asList()
             val region: String = when {
                 addressComponents.any { it.types.contains("administrative_area_level_1") } -> {
@@ -74,6 +74,7 @@ class LocationRepoImpl(
                         addressComponents.last { component -> component.types.any { it.contains("administrative_area_level_1") } }
                     component.shortName ?: component.name
                 }
+
                 else -> addressComponents.last().shortName ?: addressComponents.last().name
             }
             LocationState.Fixed(place.id!!, FixedLocation(place.latLng!!, place.name!!, region))
