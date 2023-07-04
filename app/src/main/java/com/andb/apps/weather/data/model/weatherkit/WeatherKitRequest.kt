@@ -128,8 +128,8 @@ data class WeatherKitDailyConditions(
     @field:Json(name = "sunsetAstronomical") val sunsetAstronomical: String,
     @field:Json(name = "temperatureMax") val temperatureMax: Double,
     @field:Json(name = "temperatureMin") val temperatureMin: Double,
-    @field:Json(name = "daytimeForecast") val daytimeForecast: WeatherKitDayPart,
-    @field:Json(name = "overnightForecast") val overnightForecast: WeatherKitDayPart,
+    @field:Json(name = "daytimeForecast") val daytimeForecast: WeatherKitDayPart? = null,
+    @field:Json(name = "overnightForecast") val overnightForecast: WeatherKitDayPart? = null,
     @field:Json(name = "restOfDayForecast") val restOfDayForecast: WeatherKitDayPart? = null,
 )
 

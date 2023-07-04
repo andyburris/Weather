@@ -23,6 +23,7 @@ import com.andb.apps.weather.Machine
 import com.andb.apps.weather.Screen
 import com.andb.apps.weather.data.model.Conditions
 import com.andb.apps.weather.ui.common.ErrorItem
+import com.andb.apps.weather.ui.common.fastTo
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -98,19 +99,21 @@ private fun DailyItems(
     modifier: Modifier = Modifier,
     onFirstCardMeasured: (Dp) -> Unit
 ) {
-    val globalRanges = GlobalRanges(
-        temperatureRange = conditions.days.minOf { it.day.temperatureLow }
-            .roundToInt()..conditions.days.maxOf { it.day.temperatureHigh }.roundToInt(),
-        windRange = conditions.days.flatMap { day -> day.hourly.map { it.windSpeed } }
-            .let { speeds ->
-                speeds.minOf { it }.roundToInt()..speeds.maxOf { it }.roundToInt()
-            }
-    )
+    val globalRanges = remember(conditions) {
+        GlobalRanges(
+            temperatureRange = conditions.days.minOf { it.day.temperatureLow }
+                .roundToInt() fastTo conditions.days.maxOf { it.day.temperatureHigh }.roundToInt(),
+            windRange = conditions.days.flatMap { day -> day.hourly.map { it.windSpeed } }
+                .let { speeds ->
+                    speeds.minOf { it }.roundToInt() fastTo speeds.maxOf { it }.roundToInt()
+                }
+        )
+    }
     Column(modifier = modifier) {
+        val coroutineScope = rememberCoroutineScope()
+        val scrollDispatcher: MutableSharedFlow<Float> = remember { MutableSharedFlow() }
         conditions.days.forEachIndexed { index, dayItem ->
             val density = LocalDensity.current
-            val coroutineScope = rememberCoroutineScope()
-            val scrollDispatcher: MutableSharedFlow<Float> = remember { MutableSharedFlow() }
             DailyItem(
                 dayItem = dayItem,
                 globalRanges = globalRanges,

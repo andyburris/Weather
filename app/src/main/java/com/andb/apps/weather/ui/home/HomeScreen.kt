@@ -105,7 +105,7 @@ private fun WithLocation(
     modifier: Modifier = Modifier,
     onAction: (Machine.Action) -> Unit,
 ) {
-    val (selectedView, onSelectView) = remember { mutableStateOf(HomeView.Summary) }
+    val selectedView = remember { mutableStateOf(HomeView.Summary) }
     BoxWithConstraints(modifier = modifier) {
         val (isLocationPickerOpen, setLocationPickerOpen) = remember(locationState) {
             mutableStateOf(false)
@@ -127,18 +127,18 @@ private fun WithLocation(
             LocationContent(
                 locationState = locationState,
                 conditionState = conditionState,
-                selectedView = selectedView,
+                selectedView = selectedView.value,
                 modifier = Modifier.weight(1f),
                 onAction = onAction,
                 onOpenLocationPicker = { setLocationPickerOpen(true) }
             )
             ViewChips(
-                selected = selectedView,
+                selected = selectedView.value,
                 modifier = Modifier
                     .shadow(8.dp)
                     .background(MaterialTheme.colors.background),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                onSelect = onSelectView,
+                onSelect = { selectedView.value = it },
             )
         }
 

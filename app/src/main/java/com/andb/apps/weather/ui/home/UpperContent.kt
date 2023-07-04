@@ -41,7 +41,7 @@ fun UpperContent(
         LocationHeader(
             locationState = locationState,
             modifier = Modifier
-                .padding(top = animationInfo.scrollAmount.coerceAtMost(animationInfo.upperContentHeight - 72.dp))
+                .padding(top = animationInfo.scrollAmount.coerceAtMost(animationInfo.upperContentHeight - 128.dp))
                 .fillMaxWidth(),
             onClick = onOpenLocationPicker
         )

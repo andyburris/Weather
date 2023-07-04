@@ -3,11 +3,11 @@ package com.andb.apps.weather.ui.home
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,22 +15,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.andb.apps.weather.data.model.DayItem
+import com.andb.apps.weather.data.model.HourlyConditions
+import com.andb.apps.weather.ui.common.FastIntRange
+import com.andb.apps.weather.ui.common.asIntRange
+import com.andb.apps.weather.ui.theme.WeatherColors
 import com.andb.apps.weather.ui.theme.onBackgroundDivider
 import com.andb.apps.weather.ui.theme.onBackgroundSecondary
 import com.andb.apps.weather.ui.theme.onBackgroundTertiary
@@ -40,9 +46,10 @@ import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 data class GlobalRanges(
-    val temperatureRange: IntRange,
-    val windRange: IntRange,
+    val temperatureRange: FastIntRange,
+    val windRange: FastIntRange,
 )
+
 
 @Composable
 fun DailyItem(
@@ -71,28 +78,93 @@ fun DailyItem(
             )
             TemperatureWidget(
                 dailyScale = dayItem.day.temperatureLow.roundToInt()..dayItem.day.temperatureHigh.roundToInt(),
-                globalScale = globalRanges.temperatureRange,
+                globalScale = globalRanges.temperatureRange.asIntRange(),
                 modifier = Modifier.weight(1f)
             )
         }
         AnimatedVisibility(visible = selectedView != HomeView.Summary) {
-            Spacer(modifier = Modifier.height(16.dp))
-            HomeViewWidget(
-                selectedView = selectedView,
-                dayItem = dayItem,
-                globalRanges = globalRanges,
-                scrollDispatcher = scrollDispatcher,
-                onDispatchScroll = onDispatchScroll,
-            )
-            /*
-                        Spacer(
-                            modifier = Modifier
-                                .padding(horizontal = 24.dp)
-                                .background(MaterialTheme.colors.onBackgroundTertiary, MaterialTheme.shapes.medium)
-                                .height(60.dp)
-                            )
-            */
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                HomeViewWidget(
+                    selectedView = selectedView,
+                    dayItem = dayItem,
+                    globalRanges = globalRanges,
+                    scrollDispatcher = scrollDispatcher,
+                    onDispatchScroll = onDispatchScroll,
+                )
+                /*
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState())
+                                        .padding(horizontal = 24.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    val barColor = WeatherColors.viewColors(selectedView).graphic
+                                    dayItem.hourly.forEach { hourlyConditions ->
+                                        TestItem(
+                                            selectedView = selectedView,
+                                            hourlyConditions = hourlyConditions,
+                                            globalRanges = globalRanges,
+                                            barColor = barColor,
+                                            barHeight = 48.dp,
+                                            Modifier
+                                                .height(60.dp)
+                                                .recomposeHighlighter(),
+                                        )
+                                        HourlyItem(
+                                            selectedView = selectedView,
+                                            hourlyConditions = hourlyConditions,
+                                            globalRanges = globalRanges,
+                                            barColor = barColor,
+                                            barHeight = 48.dp,
+                                            modifier = Modifier
+                                                .height(60.dp)
+                                        )
+                                    }
+                                }
+                */
+            }
         }
+    }
+}
+
+private val GraphBarShape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+
+@Composable
+private fun TestItem(
+    selectedView: HomeView,
+    hourlyConditions: HourlyConditions,
+    globalRanges: GlobalRanges,
+    barColor: Color,
+    barHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val x = remember { hourlyConditions }
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.Bottom),
+    ) {
+        Text(
+            text = "50%",
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.onBackground,
+        )
+        Box(
+            modifier = Modifier
+                .background(
+                    color = Color.Red,
+                    shape = GraphBarShape
+                )
+                .height(60.dp * .5f)
+                .width(32.dp)
+        )
+        Text(
+            text = "1pm",
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.onBackgroundSecondary,
+        )
     }
 }
 
@@ -151,6 +223,7 @@ private fun HomeViewWidget(
     modifier: Modifier = Modifier,
     onDispatchScroll: (dragAmount: Float) -> Unit,
 ) {
+    val barColor = WeatherColors.viewColors(selectedView).graphic
     when (selectedView) {
         HomeView.Summary -> Summary(
             dayItem = dayItem,
@@ -158,34 +231,35 @@ private fun HomeViewWidget(
         )
 
         else -> {
-            val lazyListState = rememberLazyListState()
+            val scrollState = rememberScrollState()
             LaunchedEffect(dayItem.day.date.dayOfMonth) {
-                println("collecting scrollDispatcher, today = ${dayItem.day.date.dayOfMonth}")
+//                println("collecting scrollDispatcher, today = ${dayItem.day.date.dayOfMonth}")
                 scrollDispatcher.collect { dragAmount ->
-                    println("collecting scroll of ${dragAmount}px, today = ${dayItem.day.date.dayOfMonth}")
-                    lazyListState.scroll { this.scrollBy(dragAmount) }
+//                    println("collecting scroll of ${dragAmount}px, today = ${dayItem.day.date.dayOfMonth}")
+                    scrollState.scroll { this.scrollBy(dragAmount) }
                 }
             }
             val thisHourOffset = dayItem.hourly.minBy { it.time }.time.hour
-            LazyRow(
+            Row(
                 modifier = modifier
                     .pointerInput(Unit) {
                         this.detectDragGesturesAfterLongPress(
                             onDrag = { change, dragAmount -> onDispatchScroll.invoke(-dragAmount.x) }
                         )
-                    },
+                    }
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.Bottom,
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                state = lazyListState,
             ) {
-                items(dayItem.hourly) { hourlyConditions ->
+                dayItem.hourly.map { hourlyConditions ->
                     val inPast =
                         (hourlyConditions.time.dayOfMonth <= LocalDateTime.now().dayOfMonth) && (hourlyConditions.time.hour < LocalDateTime.now().hour)
                     HourlyItem(
                         selectedView = selectedView,
                         hourlyConditions = hourlyConditions,
                         globalRanges = globalRanges,
+                        barColor = barColor,
                         modifier = Modifier
                             .height(60.dp)
                             .graphicsLayer(alpha = if (inPast) 0.5f else 1.0f)
