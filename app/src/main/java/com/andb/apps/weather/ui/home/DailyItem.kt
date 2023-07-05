@@ -239,7 +239,7 @@ private fun HomeViewWidget(
                     scrollState.scroll { this.scrollBy(dragAmount) }
                 }
             }
-            val thisHourOffset = dayItem.hourly.minBy { it.time }.time.hour
+//            val thisHourOffset = dayItem.hourly.minBy { it.time }.time.hour
             Row(
                 modifier = modifier
                     .pointerInput(Unit) {
