@@ -47,6 +47,5 @@ object Prefs : KotprefModel(), KoinComponent {
 
     var units by enumValuePref(UnitType.US, KEY_UNITS)
     var time24HrFormat by booleanPref(false, KEY_UNIT_TIME)
-
 }
 
