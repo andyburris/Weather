@@ -1,17 +1,14 @@
 package com.andb.apps.weather
 
 import android.app.Application
-import android.content.Context
 import android.location.Geocoder
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.andb.apps.weather.data.local.DEBUG_OFFLINE
 import com.andb.apps.weather.data.local.Database
 import com.andb.apps.weather.data.local.Prefs
 import com.andb.apps.weather.data.local.WeatherSettings
+import com.andb.apps.weather.data.local.dataStore
 import com.andb.apps.weather.data.model.LocalDateTimeAdapter
 import com.andb.apps.weather.data.model.climacell.ClimacellOzoneAdapter
 import com.andb.apps.weather.data.model.climacell.ClimacellWindDirectionAdapter
@@ -93,7 +90,7 @@ class App : Application() {
         single<PlacesClient> { Places.createClient(androidContext()) }
 
         single<WeatherSettings> {
-            WeatherSettings(DataStoreSettings(datastore = datastore))
+            WeatherSettings(DataStoreSettings(datastore = dataStore))
         }
         single<ProviderRepo> {
             if (DEBUG_OFFLINE) {
